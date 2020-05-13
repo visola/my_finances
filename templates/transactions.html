@@ -1,6 +1,7 @@
 <html>
 <body>
     <h1>TRANSACTIONS!</h1>
+    <a href="/new">create new</a>
     <table>
         <thead>
             <tr>
@@ -16,7 +17,7 @@
             {% for transaction in transactions %}
                 <tr>
                     <td>
-                        {{ transaction.id }}
+                        <a href="/{{ transaction.id }}">{{ transaction.id }}</a>
                     </td>
                     <td>
                         {{ transaction.description }}
