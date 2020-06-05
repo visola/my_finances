@@ -1,0 +1,30 @@
+<html>
+<body>
+    <h1>CATEGORIES</h1>
+    <a href="/categories/new">create new</a>
+    <table>
+        <thead>
+            <tr>
+                <th>
+                    id
+                </th>
+                <th>
+                    categoria
+                </th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for category in categories %}
+                <tr>
+                    <td>
+                        <a href="/categories/{{ category.id }}">{{ category.id }}</a>
+                    </td>
+                    <td>
+                        {{ category.description }}
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

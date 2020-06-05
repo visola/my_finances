@@ -9,6 +9,7 @@ from flask import session
 from functools import wraps
 import hashlib
 
+
 app = Flask(__name__)
 
 app.secret_key = MSQL_SECRET_KEY
@@ -126,3 +127,60 @@ def login():
         return redirect(url_for("list_transactions"))
     return redirect(url_for("get_login"))
 
+@app.route('/categories')
+@login_required
+def list_categories():
+    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
+                                host=MYSQL_HOST,
+                                database=MYSQL_DATABASE)
+    cursor = cnx.cursor()
+    select_categories = ("select * from categorias where user_id=%s")
+    session_id_data = (session["id"],)
+    cursor.execute(select_categories,session_id_data)
+    all_categories = []
+    for row in cursor:
+        all_categories.append({"id": row[0], "description": row[1]})
+    cnx.close() 
+    return render_template("categories/index.html", categories=all_categories)
+
+@app.route('/categories/new')
+@login_required
+def new_category():
+    return render_template("categories/edit.html")
+
+@app.route('/categories/<id>')
+@login_required
+def edit_category(id):
+    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
+                                host=MYSQL_HOST,
+                                database=MYSQL_DATABASE)
+    cursor = cnx.cursor()
+    select_category = ("select * from categorias where id=%s and user_id=%s")
+    category_data = (int(id),session["id"])
+    cursor.execute(select_category, category_data)
+    row = cursor.fetchone()
+    cnx.close()
+    if row is None :
+        return "Page not found."
+    return render_template("categories/edit.html", id=row[0], categoria=row[1])
+    
+@app.route('/categories/save',methods=["POST"])
+@login_required
+def save_categories():
+    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
+                                host=MYSQL_HOST,
+                                database=MYSQL_DATABASE)
+    cursor = cnx.cursor()
+    if request.form["id"] != "": 
+        update_category = ("update categorias set categoria=%s where id=%s and user_id = %s")
+        category_data = (request.form["category"],request.form["id"],session["id"])
+        cursor.execute(update_category, category_data)
+    else:
+        insert_category = ("insert into categorias(categoria,user_id) values(%s,%s)")
+        category_data = (request.form["category"],session["id"])
+        cursor.execute(insert_category, category_data)
+    cnx.commit()
+    cnx.close()
+    if cursor.rowcount == 0:
+        return "Sorry, there was an error."
+    return redirect(url_for("list_categories"))
