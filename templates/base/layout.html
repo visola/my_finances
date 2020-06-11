@@ -1,0 +1,16 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="/static/semantic.min.css"> 
+    </head>
+<body>
+    <h3 class="ui center aligned teal block inverted header">
+        My Finances
+    </h3>
+    <div class="ui visible right demo vertical inverted sidebar labeled menu">
+      <a class="item"> Home Page</a>
+      <a class="item" href="/transactions"> Transactions</a>
+      <a class="item" href="/categories"> Categories</a>
+    </div>
+    {% block content %}{% endblock %}
+</body>
+</html>

@@ -1,11 +1,10 @@
-<html>
-    <head>
-        <link rel="stylesheet" href="/static/semantic.min.css"> 
-    </head>
-<body>
-    <h1>TRANSACTIONS!</h1>
+{% extends "base/layout.html" %}
+{% block content %}
+    <h3 class="ui huge aligned teal header">
+        TRANSACTIONS
+    </h3>
     <a href="/transactions/new">create new</a>
-    <table class="ui black table">
+    <table class="ui center collapsing compact teal table">
         <thead>
             <tr>
                 <th>
@@ -29,5 +28,4 @@
             {% endfor %}
         </tbody>
     </table>
-</body>
-</html>
+{% endblock %}

@@ -1,8 +1,8 @@
-<html>
-<body>
+{% extends "base/layout.html" %}
+{% block content %}
     <h1>CATEGORIES</h1>
     <a href="/categories/new">create new</a>
-    <table>
+    <table class="ui center collapsing compact teal table">
         <thead>
             <tr>
                 <th>
@@ -26,5 +26,4 @@
             {% endfor %}
         </tbody>
     </table>
-</body>
-</html>
+{% endblock %}

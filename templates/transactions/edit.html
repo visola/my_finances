@@ -1,5 +1,5 @@
-<html>
-    <body>
+{% extends "base/layout.html" %}
+{% block content %}
         <form action="/transactions/save" method="POST">
             <input type="hidden" name="id" value="{{ id }}">
             <label>Description:</label>
@@ -7,5 +7,4 @@
             <br/>
             <input type="submit" />
         </form>
-    </body>
-</html>
+{% endblock %}
