@@ -90,17 +90,17 @@ def save_users():
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    select_usuarios = ("select count(1) from usuarios where email=%s")
+    select_users = ("select count(1) from users where email=%s")
     email_data = (request.form["email"],)
-    cursor.execute(select_usuarios, email_data)
+    cursor.execute(select_users, email_data)
     row = cursor.fetchone()
     if row[0] > 0:
         cnx.close()
         return redirect(url_for("create_user"))
-    insert_transaction = ("insert into usuarios(name,email,senha) values(%s,%s,%s)")
-    senha= hashlib.sha256(request.form["senha"].encode("utf-8")).hexdigest()
-    transaction_data = (request.form["nome"],request.form["email"],senha)
-    cursor.execute(insert_transaction, transaction_data)
+    insert_user = ("insert into users(name,email,password) values(%s,%s,%s)")
+    password = hashlib.sha256(request.form["password"].encode("utf-8")).hexdigest()
+    user_data = (request.form["name"],request.form["email"],password)
+    cursor.execute(insert_user, user_data)
     cnx.commit()
     cnx.close()
     return redirect(url_for("list_transactions"))
@@ -115,10 +115,10 @@ def login():
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    select_usuarios = ("select id from usuarios where email=%s and senha=%s")
+    select_users = ("select id from users where email=%s and password=%s")
     password= hashlib.sha256(request.form["password"].encode("utf-8")).hexdigest()
     email_data = (request.form["email"],password)
-    cursor.execute(select_usuarios, email_data)
+    cursor.execute(select_users, email_data)
     row = cursor.fetchone()
     cnx.close()
     if row is not None :
@@ -134,7 +134,7 @@ def list_categories():
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    select_categories = ("select * from categorias where user_id=%s")
+    select_categories = ("select * from categories where user_id=%s")
     session_id_data = (session["id"],)
     cursor.execute(select_categories,session_id_data)
     all_categories = []
@@ -155,14 +155,14 @@ def edit_category(id):
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    select_category = ("select * from categorias where id=%s and user_id=%s")
+    select_category = ("select * from categories where id=%s and user_id=%s")
     category_data = (int(id),session["id"])
     cursor.execute(select_category, category_data)
     row = cursor.fetchone()
     cnx.close()
     if row is None :
         return "Page not found."
-    return render_template("categories/edit.html", id=row[0], categoria=row[1])
+    return render_template("categories/edit.html", id=row[0], category=row[1])
     
 @app.route('/categories/save',methods=["POST"])
 @login_required
@@ -172,11 +172,11 @@ def save_categories():
                                 database=MYSQL_DATABASE)
     cursor = cnx.cursor()
     if request.form["id"] != "": 
-        update_category = ("update categorias set categoria=%s where id=%s and user_id = %s")
+        update_category = ("update categories set category=%s where id=%s and user_id = %s")
         category_data = (request.form["category"],request.form["id"],session["id"])
         cursor.execute(update_category, category_data)
     else:
-        insert_category = ("insert into categorias(categoria,user_id) values(%s,%s)")
+        insert_category = ("insert into categories(category,user_id) values(%s,%s)")
         category_data = (request.form["category"],session["id"])
         cursor.execute(insert_category, category_data)
     cnx.commit()

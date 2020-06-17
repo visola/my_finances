@@ -11,4 +11,10 @@
     set FLASK_ENV=development
     python -m flask run
   ```
-- Abrir no browser: http://localhost:5000/
+- Abrir no browser: http://localhost:5000/login
+
+## banco de dados
+- criar um banco de dados
+- acessar o banco `use <banco>`
+- utilizar o arquivo `script_my_finances.sql` e aplicar seus comandos
+- para ativar as paginas do browser, use as intruções de ## local development na linha de comnando
