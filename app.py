@@ -124,7 +124,7 @@ def login():
     if row is not None :
         session['email'] = request.form['email']
         session['id'] = row[0]
-        return redirect(url_for("list_transactions"))
+        return redirect(url_for("dashboard"))
     return redirect(url_for("get_login"))
 
 @app.route('/categories')
@@ -184,3 +184,8 @@ def save_categories():
     if cursor.rowcount == 0:
         return "Sorry, there was an error."
     return redirect(url_for("list_categories"))
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    return render_template("home_page/index.html")

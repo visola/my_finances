@@ -1,10 +1,34 @@
 {% extends "base/layout.html" %}
 {% block content %}
-        <form action="/categories/save" method="POST">
-            <input type="hidden" name="id" value="{{ id }}">
-            <label>Description:</label>
-            <input type="text" name="category" value="{{ category }}"/>
-            <br/>
-            <input type="submit" />
-        </form>
+<html>
+    <head>
+        <link rel="stylesheet" href="/static/semantic.min.css"> 
+        <style type="text/css">
+            body {
+              background-color: #DADADA;
+            }
+            body > .grid {
+              height: 100%;
+            }
+            .image {
+              margin-top: -100px;
+            }
+            .column {
+              max-width: 450px;
+            }
+          </style>
+    </head>
+    <body>
+        <form class="ui center aligned form" action="/categories/save" method="POST">
+            <div class="four wide field">
+                <input type="hidden" name="id" value="{{ id }}">
+                <label>Description:</label>
+                <input type="text" name="category" value="{{ category }}"/>
+                <br/>
+            <input type="submit" class="ui teal submit button"  placeholder="Submit"/>
+          </form>
+    </body>
+</html>
+</form>
 {% endblock %}
+
