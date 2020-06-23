@@ -3,11 +3,11 @@
         <link rel="stylesheet" href="/static/semantic.min.css"> 
     </head>
 <body>
-    <h3 class="ui center aligned teal block inverted header">
-        My Finances
-        <button onclick="location.href='http://localhost:5000/login'" type="button" class="mini circular ui left floated button">
-            Log out</button>
-    </h3>
+    <div class= "ui inverted menu ">
+    <div class="ui center aligned teal  header item">My Finances</div>
+        <a class="item ">{{session['name']}}</a>
+        <a class="item" href="/logout">Log out</a>
+    </div>
     <div class="ui visible right demo vertical inverted sidebar labeled menu">
       <a class="item" href="/dashboard"> Home Page</a>
       <a class="item" href="/transactions"> Transactions</a>

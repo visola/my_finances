@@ -109,13 +109,19 @@ def save_users():
 def get_login():
     return render_template("login/index.html")
 
+@app.route('/logout')
+def logout():
+    session.pop('email', None)
+    session.pop('id', None)
+    return redirect(url_for('get_login'))
+
 @app.route('/login',methods=["POST"])
 def login():
     cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    select_users = ("select id from users where email=%s and password=%s")
+    select_users = ("select id, name from users where email=%s and password=%s")
     password= hashlib.sha256(request.form["password"].encode("utf-8")).hexdigest()
     email_data = (request.form["email"],password)
     cursor.execute(select_users, email_data)
@@ -124,6 +130,7 @@ def login():
     if row is not None :
         session['email'] = request.form['email']
         session['id'] = row[0]
+        session['name'] = row[1]
         return redirect(url_for("dashboard"))
     return redirect(url_for("get_login"))
 
