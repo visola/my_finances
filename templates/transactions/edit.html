@@ -25,11 +25,18 @@
                 <label>Description:</label>
                 <input type="text" name="description" value="{{ description }}"/>
                 <br/>
+                <label>Choose your category:</label>
+                <select class="ui fluid dropdown" name="category_id">
+                  <option value="-1">None</option>
+                  {% for category in categories %}
+                    <option value="{{category[0]}}" {{ 'selected' if category[0] == category_id  else '' }}> {{category[1]}} </option>
+                  {% endfor %}
+                  
+                </select>
             <input type="submit" class="ui teal submit button"  placeholder="Submit"/>
             </form>
     </body>
 </html>
 </form>
 {% endblock %}
-
 
