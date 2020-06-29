@@ -16,6 +16,12 @@
                 <th>
                     category
                 </th>
+                <th>
+                    date
+                </th>
+                <th>
+                    value
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -29,6 +35,12 @@
                     </td>
                     <td>
                         {{ transaction.category }}
+                    </td>
+                    <td>
+                        {{ transaction.date.strftime('%d/%m/%Y') }}
+                    </td>
+                    <td>
+                        $ {{ transaction.value }}
                     </td>
                 </tr>
             {% endfor %}

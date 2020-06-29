@@ -7,6 +7,9 @@ from flask import url_for
 from flask import redirect
 from flask import session
 from functools import wraps
+from datetime import date
+from datetime import datetime
+import re
 import hashlib
 
 
@@ -29,13 +32,13 @@ def list_transactions():
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    select_transactions = ("select t.id,t.description, c.category from transactions t left join categories c on category_id = c.id where t.user_id=%s")
+    select_transactions = ("select t.id,t.description,c.category,t.date,t.value from transactions t left join categories c on category_id = c.id where t.user_id=%s")
     session_id_data = (session["id"],)
     cursor.execute(select_transactions,session_id_data)
     all_transactions = []
     print(cursor.column_names)
     for row in cursor:
-        all_transactions.append({"id": row[0], "description": row[1], "category": row[2]})
+        all_transactions.append({"id": row[0], "description": row[1], "category": row[2], "date": row[3], "value": row[4]})
     cnx.close() 
     return render_template("transactions/index.html", transactions=all_transactions)
 
@@ -51,7 +54,7 @@ def new_transaction():
     cursor.execute(select_categories,category_data)
     all_categories = cursor.fetchall()
     cnx.close()
-    return render_template("transactions/edit.html", categories=all_categories)
+    return render_template("transactions/edit.html", categories=all_categories, date= datetime.now())
 
 @app.route('/transactions/<id>')
 @login_required
@@ -60,7 +63,7 @@ def edit_transaction(id):
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    select_transaction = ("select id,description,category_id from transactions where id=%s and user_id=%s")    
+    select_transaction = ("select id,description,category_id,date,value from transactions where id=%s and user_id=%s")    
     transaction_data = (int(id),session["id"])
     cursor.execute(select_transaction, transaction_data)    
     row = cursor.fetchone()
@@ -71,7 +74,7 @@ def edit_transaction(id):
     cnx.close()
     if row is None :
         return "Page not found."
-    return render_template("transactions/edit.html", id=row[0], description=row[1], categories=all_categories , category_id = row[2])
+    return render_template("transactions/edit.html", id=row[0], description=row[1], categories=all_categories , category_id = row[2], date=row[3], value=row[4])
     
 @app.route('/transactions/save',methods=["POST"])
 @login_required
@@ -79,6 +82,14 @@ def save_transactions():
     cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
+    value = request.form["value"].replace(".","").replace(",",".")
+    if value == "":
+        return "Value can not be empty."
+    date = request.form["date"]
+    if re.match("\\d{2}/\\d{2}/\\d{4}", date) is not None:
+        date = datetime.strptime(request.form["date"],'%d/%m/%Y')
+    else:
+        return f"'{date}' Is not in the format dd/mm/yyyy"
     category_id = request.form['category_id']
     if category_id == "-1":
         category_id = None
@@ -91,12 +102,12 @@ def save_transactions():
         cnx.close()
         return "Sorry, there was an error."
     if request.form["id"] != "":        
-        update_transaction = ("update transactions set description=%s,category_id=%s where id=%s and user_id = %s")
-        transaction_data = (request.form["description"],category_id,request.form["id"],session["id"])
+        update_transaction = ("update transactions set description=%s,category_id=%s,date=%s,value=%s where id=%s and user_id = %s")
+        transaction_data = (request.form["description"],category_id,date,value,request.form["id"],session["id"])
         cursor.execute(update_transaction, transaction_data)
     else:
-        insert_transaction = ("insert into transactions(description,user_id,category_id) values(%s,%s,%s)")
-        transaction_data = (request.form["description"],session["id"],category_id)
+        insert_transaction = ("insert into transactions(description,user_id,category_id,date,value) values(%s,%s,%s,%s,%s)")                
+        transaction_data = (request.form["description"],session["id"],category_id,date,value)
         cursor.execute(insert_transaction, transaction_data)
     cnx.commit()
     cnx.close()
