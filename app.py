@@ -32,7 +32,7 @@ def list_transactions():
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    select_transactions = ("select t.id,t.description,c.category,t.date,t.value from transactions t left join categories c on category_id = c.id where t.user_id=%s")
+    select_transactions = ("select t.id,t.description,c.category,t.date,t.value from transactions t left join categories c on category_id = c.id where t.user_id=%s order by date desc")
     session_id_data = (session["id"],)
     cursor.execute(select_transactions,session_id_data)
     all_transactions = []
