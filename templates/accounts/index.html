@@ -1,0 +1,37 @@
+{% extends "base/layout.html" %}
+{% block content %}
+    <h1 class="ui teal header">
+        ACCOUNTS
+    </h1>
+    <a href="/accounts/new">create new</a>
+    <table class="ui center collapsing compact teal table">
+        <thead>
+            <tr>
+                <th>
+                    id
+                </th>
+                <th>
+                    name
+                </th>
+                <th>
+                    type
+                </th>                
+            </tr>
+        </thead>
+        <tbody>
+            {% for account in accounts %}
+                <tr>
+                    <td>
+                        <a href="/accounts/{{ account.id }}">{{ account.id }}</a>
+                    </td>
+                    <td>
+                        {{ account.name }}
+                    </td>
+                    <td>
+                        {{ account.type }}
+                    </td>                    
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

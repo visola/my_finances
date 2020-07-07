@@ -231,3 +231,70 @@ def save_categories():
 @login_required
 def dashboard():
     return render_template("home_page/index.html")
+
+@app.route('/accounts')
+@login_required
+def list_accounts():
+    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
+                                host=MYSQL_HOST,
+                                database=MYSQL_DATABASE)
+    cursor = cnx.cursor()
+    select_accounts = ("select * from accounts where user_id=%s")
+    session_id_data = (session["id"],)
+    cursor.execute(select_accounts,session_id_data)
+    all_accounts = []
+    for row in cursor:
+        all_accounts.append({"id": row[0], "name": row[1], "user_id": row[2], "type": row[3]})
+    cnx.close() 
+    return render_template("accounts/index.html", accounts=all_accounts)
+
+@app.route('/accounts/new')
+@login_required
+def new_account():
+    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
+                                host=MYSQL_HOST,
+                                database=MYSQL_DATABASE)
+    cursor = cnx.cursor()
+    select_accounts = ("select id,name,type from accounts where user_id=%s") 
+    account_data = (session["id"],)
+    cursor.execute(select_accounts,account_data)
+    all_accounts = cursor.fetchall()
+    cnx.close()
+    return render_template("accounts/edit.html", accounts=all_accounts)
+    
+@app.route('/accounts/<id>')
+@login_required
+def edit_accounts(id):
+    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
+                                host=MYSQL_HOST,
+                                database=MYSQL_DATABASE)
+    cursor = cnx.cursor()
+    select_accounts = ("select * from accounts where id=%s and user_id=%s")
+    account_data = (int(id),session["id"])
+    cursor.execute(select_accounts, account_data)
+    row = cursor.fetchone()
+    cnx.close()
+    if row is None :
+        return "Page not found."
+    return render_template("accounts/edit.html", id=row[0], name=row[1], user_id=row[2], type=row[3])
+    
+@app.route('/accounts/save',methods=["POST"])
+@login_required
+def save_accounts():
+    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
+                                host=MYSQL_HOST,
+                                database=MYSQL_DATABASE)
+    cursor = cnx.cursor()
+    if request.form["id"] != "": 
+        update_accounts = ("update accounts set name=%s,type=%s where id=%s and user_id = %s")
+        account_data = (request.form["name"],request.form["type"],request.form["id"],session["id"])
+        cursor.execute(update_accounts, account_data)
+    else:
+        insert_accounts = ("insert into accounts(name,user_id,type) values(%s,%s,%s)")
+        account_data = (request.form["name"],session["id"],request.form["type"])
+        cursor.execute(insert_accounts, account_data)
+    cnx.commit()
+    cnx.close()
+    if cursor.rowcount == 0:
+        return "Sorry, there was an error."
+    return redirect(url_for("list_accounts"))
