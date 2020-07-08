@@ -1,0 +1,33 @@
+<html>
+    <head>
+        <link rel="stylesheet" href="/static/semantic.min.css">
+        <style type="text/css">
+            body {
+              background-color: #DADADA;
+            }
+            body > .grid {
+              height: 100%;
+            }
+            .image {
+              margin-top: -100px;
+            }
+            .column {
+              max-width: 450px;
+            }
+          </style>
+    </head>
+<body>
+    <div class= "ui inverted menu ">
+    <div class="ui center aligned teal  header item">My Finances</div>
+        <a class="item ">{{session['name']}}</a>
+        <a class="item" href="/logout">Log out</a>
+    </div>
+    <div class="ui visible right demo vertical inverted sidebar labeled menu">
+      <a class="item" href="/dashboard"> Home Page</a>
+      <a class="item" href="/transactions"> Transactions</a>
+      <a class="item" href="/categories"> Categories</a>
+      <a class="item" href="/accounts"> Accounts</a>
+    </div>
+    {% block content %}{% endblock %}
+</body>
+</html>

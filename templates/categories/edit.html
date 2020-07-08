@@ -1,23 +1,6 @@
-{% extends "base/layout.html" %}
+{% extends "base/layout_edit.html" %}
 {% block content %}
 <html>
-    <head>
-        <link rel="stylesheet" href="/static/semantic.min.css"> 
-        <style type="text/css">
-            body {
-              background-color: #DADADA;
-            }
-            body > .grid {
-              height: 100%;
-            }
-            .image {
-              margin-top: -100px;
-            }
-            .column {
-              max-width: 450px;
-            }
-          </style>
-    </head>
     <body>
         <form class="ui center aligned form" action="/categories/save" method="POST">
             <div class="four wide field">
@@ -31,4 +14,3 @@
 </html>
 </form>
 {% endblock %}
-

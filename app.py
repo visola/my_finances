@@ -239,7 +239,7 @@ def list_accounts():
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    select_accounts = ("select * from accounts where user_id=%s")
+    select_accounts = ("select id,name,user_id,type from accounts where user_id=%s")
     session_id_data = (session["id"],)
     cursor.execute(select_accounts,session_id_data)
     all_accounts = []
@@ -250,17 +250,8 @@ def list_accounts():
 
 @app.route('/accounts/new')
 @login_required
-def new_account():
-    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                host=MYSQL_HOST,
-                                database=MYSQL_DATABASE)
-    cursor = cnx.cursor()
-    select_accounts = ("select id,name,type from accounts where user_id=%s") 
-    account_data = (session["id"],)
-    cursor.execute(select_accounts,account_data)
-    all_accounts = cursor.fetchall()
-    cnx.close()
-    return render_template("accounts/edit.html", accounts=all_accounts)
+def new_account():    
+    return render_template("accounts/edit.html")
     
 @app.route('/accounts/<id>')
 @login_required
@@ -269,7 +260,7 @@ def edit_accounts(id):
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    select_accounts = ("select * from accounts where id=%s and user_id=%s")
+    select_accounts = ("select id,name,user_id,type from accounts where id=%s and user_id=%s")
     account_data = (int(id),session["id"])
     cursor.execute(select_accounts, account_data)
     row = cursor.fetchone()
