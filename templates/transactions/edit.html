@@ -24,7 +24,24 @@
                   <div class="required four wide field">                    
                     <label>Value:</label>
                     <input type="text" name="value" value="{{ value }}"/>
-                    </div>                
+                    </div>
+                    <div class="four wide field">
+                      <label>Choose your origin account:</label>
+                      <select class="ui fluid dropdown" name="source_accnt_id">                        
+                        {% for account in accounts %}
+                          <option value="{{account[0]}}" {{ 'selected' if account[0] == source_accnt_id  else '' }}> {{account[1]}} </option>
+                        {% endfor %}
+                      </select>
+                    </div>                    
+                    <div class="four wide field">
+                      <label>Choose your destiny account:</label>
+                      <select class="ui fluid dropdown" name="destination_accnt_id">
+                        <option value="-1">None</option>                
+                        {% for account in accounts %}
+                          <option value="{{account[0]}}" {{ 'selected' if account[0] == destination_accnt_id  else '' }}> {{account[1]}} </option>
+                        {% endfor %}
+                      </select>                      
+                    </div>           
             <input type="submit" class="ui teal submit button"  placeholder="Submit"/>
             </form>
     </body>

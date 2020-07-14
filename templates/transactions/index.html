@@ -22,6 +22,12 @@
                 <th>
                     value
                 </th>
+                <th>
+                    origin account
+                </th>
+                <th>
+                    destiny account
+                </th>
             </tr>
         </thead>
         <tbody>
@@ -41,6 +47,12 @@
                     </td>
                     <td>
                         $ {{ transaction.value }}
+                    </td>
+                    <td>
+                        {{ transaction.source_account }}
+                    </td>
+                    <td>
+                        {{ transaction.destination_account }}
                     </td>
                 </tr>
             {% endfor %}

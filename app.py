@@ -32,13 +32,12 @@ def list_transactions():
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    select_transactions = ("select t.id,t.description,c.category,t.date,t.value from transactions t left join categories c on category_id = c.id where t.user_id=%s order by date desc")
+    select_transactions = ("select t.id,t.description,c.category,t.date,t.value,a.name,a1.name from transactions t left join categories c on t.category_id = c.id join accounts a on t.source_accnt_id = a.id left join accounts a1 on t.destination_accnt_id = a1.id where t.user_id=%s order by date desc")
     session_id_data = (session["id"],)
     cursor.execute(select_transactions,session_id_data)
     all_transactions = []
-    print(cursor.column_names)
     for row in cursor:
-        all_transactions.append({"id": row[0], "description": row[1], "category": row[2], "date": row[3], "value": row[4]})
+        all_transactions.append({"id": row[0], "description": row[1], "category": row[2], "date": row[3], "value": row[4], "source_account":row[5], "destination_account":row[6]})
     cnx.close() 
     return render_template("transactions/index.html", transactions=all_transactions)
 
@@ -49,12 +48,16 @@ def new_transaction():
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    select_categories = ("select id,category from categories where user_id=%s") 
+    select_categories = ("select id,category from categories where user_id=%s")    
     category_data = (session["id"],)
     cursor.execute(select_categories,category_data)
     all_categories = cursor.fetchall()
+    select_accounts = ("select id,name from accounts where user_id=%s")
+    account_data = (session["id"],)
+    cursor.execute(select_accounts,account_data)
+    all_accounts = cursor.fetchall()
     cnx.close()
-    return render_template("transactions/edit.html", categories=all_categories, date= datetime.now())
+    return render_template("transactions/edit.html", categories=all_categories, date= datetime.now(), accounts=all_accounts)
 
 @app.route('/transactions/<id>')
 @login_required
@@ -63,18 +66,22 @@ def edit_transaction(id):
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    select_transaction = ("select id,description,category_id,date,value from transactions where id=%s and user_id=%s")    
+    select_transaction = ("select id,description,category_id,date,value,source_accnt_id,destination_accnt_id from transactions where id=%s and user_id=%s")    
     transaction_data = (int(id),session["id"])
     cursor.execute(select_transaction, transaction_data)    
-    row = cursor.fetchone()
-    select_categories = ("select id,category from categories where user_id=%s") 
+    row = cursor.fetchone()    
+    select_categories = ("select id,category from categories where user_id=%s")
     category_data = (session["id"],)   
     cursor.execute(select_categories,category_data)
     all_categories = cursor.fetchall()
+    select_accounts = ("select id,name from accounts where user_id=%s")
+    account_data = (session["id"],)
+    cursor.execute(select_accounts,account_data)
+    all_accounts = cursor.fetchall()
     cnx.close()
     if row is None :
         return "Page not found."
-    return render_template("transactions/edit.html", id=row[0], description=row[1], categories=all_categories , category_id = row[2], date=row[3], value=row[4])
+    return render_template("transactions/edit.html", id=row[0], description=row[1], categories=all_categories , category_id = row[2], date=row[3], value=row[4], accounts=all_accounts)
     
 @app.route('/transactions/save',methods=["POST"])
 @login_required
@@ -84,7 +91,9 @@ def save_transactions():
                                 database=MYSQL_DATABASE)
     value = request.form["value"].replace(".","").replace(",",".")
     if value == "":
-        return "Value can not be empty."
+        return "Value can not be empty."    
+    if request.form["source_accnt_id"] == request.form["destination_accnt_id"]:
+        return "Source account and destination account can not be the same."
     date = request.form["date"]
     if re.match("\\d{2}/\\d{2}/\\d{4}", date) is not None:
         date = datetime.strptime(request.form["date"],'%d/%m/%Y')
@@ -102,12 +111,12 @@ def save_transactions():
         cnx.close()
         return "Sorry, there was an error."
     if request.form["id"] != "":        
-        update_transaction = ("update transactions set description=%s,category_id=%s,date=%s,value=%s where id=%s and user_id = %s")
-        transaction_data = (request.form["description"],category_id,date,value,request.form["id"],session["id"])
+        update_transaction = ("update transactions set description=%s,category_id=%s,date=%s,value=%s,source_accnt_id=%s,destination_accnt_id=%s where id=%s and user_id = %s")
+        transaction_data = (request.form["description"],category_id,date,value,request.form["source_accnt_id"],request.form["destination_accnt_id"],request.form["id"],session["id"])
         cursor.execute(update_transaction, transaction_data)
     else:
-        insert_transaction = ("insert into transactions(description,user_id,category_id,date,value) values(%s,%s,%s,%s,%s)")                
-        transaction_data = (request.form["description"],session["id"],category_id,date,value)
+        insert_transaction = ("insert into transactions(description,user_id,category_id,date,value,source_accnt_id,destination_accnt_id) values(%s,%s,%s,%s,%s,%s,%s)")                
+        transaction_data = (request.form["description"],session["id"],category_id,date,value,request.form["source_accnt_id"],request.form["destination_accnt_id"])
         cursor.execute(insert_transaction, transaction_data)
     cnx.commit()
     cnx.close()
