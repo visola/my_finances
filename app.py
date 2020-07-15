@@ -81,7 +81,18 @@ def edit_transaction(id):
     cnx.close()
     if row is None :
         return "Page not found."
-    return render_template("transactions/edit.html", id=row[0], description=row[1], categories=all_categories , category_id = row[2], date=row[3], value=row[4], accounts=all_accounts)
+    return render_template(
+        "transactions/edit.html", 
+        accounts=all_accounts,
+        categories=all_categories, 
+        category_id = row[2], 
+        date=row[3], 
+        description=row[1], 
+        destination_accnt_id =row[6],
+        id=row[0], 
+        source_accnt_id = row[5], 
+        value=row[4], 
+    )
     
 @app.route('/transactions/save',methods=["POST"])
 @login_required

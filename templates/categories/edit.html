@@ -1,16 +1,11 @@
 {% extends "base/layout_edit.html" %}
 {% block content %}
-<html>
-    <body>
-        <form class="ui center aligned form" action="/categories/save" method="POST">
-            <div class="four wide field">
-                <input type="hidden" name="id" value="{{ id }}">
-                <label>Description:</label>
-                <input type="text" name="category" value="{{ category }}"/>
-                <br/>
-            <input type="submit" class="ui teal submit button"  placeholder="Submit"/>
-          </form>
-    </body>
-</html>
+<form class="ui center aligned form" action="/categories/save" method="POST">
+    <div class="four wide field">
+        <input type="hidden" name="id" value="{{ id }}">
+        <label>Description:</label>
+        <input type="text" name="category" value="{{ category }}"/>
+        <br/>
+    <input type="submit" class="ui teal submit button"  placeholder="Submit"/>
 </form>
 {% endblock %}

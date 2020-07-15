@@ -1,51 +1,71 @@
 {% extends "base/layout_edit.html" %}
 {% block content %}
-<html>
-    <body>
-        <form class="ui center aligned form" action="/transactions/save" method="POST">
-            <div class="required four wide field">
-                <input type="hidden" name="id" value="{{ id }}">
-                <label>Description:</label>
-                <input type="text" name="description" value="{{ description }}"/>
-                </div>
-                <div class="four wide field">
-                <label>Choose your category:</label>
-                <select class="ui fluid dropdown" name="category_id">
-                  <option value="-1">None</option>
-                  {% for category in categories %}
-                    <option value="{{category[0]}}" {{ 'selected' if category[0] == category_id  else '' }}> {{category[1]}} </option>
-                  {% endfor %}
-                </select>
-              </div> 
-                  <div class="required four wide field">                    
-                    <label>Date:</label>
-                    <input type="text" name="date" value="{{ date.strftime('%d/%m/%Y') }}"/>
-                    </div>
-                  <div class="required four wide field">                    
-                    <label>Value:</label>
-                    <input type="text" name="value" value="{{ value }}"/>
-                    </div>
-                    <div class="four wide field">
-                      <label>Choose your origin account:</label>
-                      <select class="ui fluid dropdown" name="source_accnt_id">                        
-                        {% for account in accounts %}
-                          <option value="{{account[0]}}" {{ 'selected' if account[0] == source_accnt_id  else '' }}> {{account[1]}} </option>
-                        {% endfor %}
-                      </select>
-                    </div>                    
-                    <div class="four wide field">
-                      <label>Choose your destiny account:</label>
-                      <select class="ui fluid dropdown" name="destination_accnt_id">
-                        <option value="-1">None</option>                
-                        {% for account in accounts %}
-                          <option value="{{account[0]}}" {{ 'selected' if account[0] == destination_accnt_id  else '' }}> {{account[1]}} </option>
-                        {% endfor %}
-                      </select>                      
-                    </div>           
-            <input type="submit" class="ui teal submit button"  placeholder="Submit"/>
-            </form>
-    </body>
-</html>
+<form class="ui center aligned form" action="/transactions/save" method="POST">
+    <div class="required four wide field">
+        <input type="hidden" name="id" value="{{ id }}">
+        <label>Description:</label>
+        <input type="text" name="description" value="{{ description }}"/>
+        </div>
+        <div class="four wide field">
+        <label>Choose your category:</label>
+        <select class="ui fluid dropdown" name="category_id">
+          <option value="-1">None</option>
+          {% for category in categories %}
+            <option value="{{category[0]}}" {{ 'selected' if category[0] == category_id  else '' }}> {{category[1]}} </option>
+          {% endfor %}
+        </select>
+      </div> 
+          <div class="required four wide field">                    
+            <label>Date:</label>
+            <input type="text" name="date" value="{{ date.strftime('%d/%m/%Y') }}"/>
+            </div>
+          <div class="required four wide field">                    
+            <label>Value:</label>
+            <input type="text" name="value" value="{{ value }}"/>
+            </div>
+            <div class="four wide field">
+              <label>Choose your origin account:</label>
+              <select class="ui fluid dropdown" name="source_accnt_id">                        
+                {% for account in accounts %}
+                  <option value="{{account[0]}}" {{ 'selected' if account[0] == source_accnt_id  else '' }}> {{account[1]}} </option>
+                {% endfor %}
+              </select>
+            </div>            
+            <div class="four wide field">
+              <label>Choose your destination account:</label>
+              <select class="ui fluid dropdown" name="destination_accnt_id">               
+              </select>
+            </div>
+    <input type="submit" class="ui teal submit button"  placeholder="Submit"/>
 </form>
+<script>
+{% if destination_accnt_id == "" %}
+let destinationAccntID = -1;
+{% else %}
+let destinationAccntID = {{destination_accnt_id}};
+{% endif %}
+
+let accounts = [];
+{% for account in accounts %}
+accounts.push({id:{{account[0]}},name:'{{account[1]}}'});
+{% endfor %}
+
+let destinationAccountCombo = document.querySelector('[name=destination_accnt_id]');
+function createDestinationOptions(sourceAccntID){
+  let options = '<option value="-1">None</option>';
+accounts.forEach((a) => {
+  if (a.id != sourceAccntID) {
+    options += `<option value="${a.id}">${a.name}</option>`;
+  }
+})
+  destinationAccountCombo.innerHTML = options;
+}
+
+document.querySelector('[name=source_accnt_id]').addEventListener('change', (e)=>{
+  createDestinationOptions(e.target.value);
+});
+
+createDestinationOptions(document.querySelector('[name=source_accnt_id]').value);
+</script>
 {% endblock %}
 
