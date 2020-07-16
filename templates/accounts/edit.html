@@ -1,24 +1,19 @@
 {% extends "base/layout_edit.html" %}
 {% block content %}
-<html>
-    <body>
-        <form class="ui center aligned form" action="/accounts/save" method="POST">
-            <div class="required four wide field">
-                <input type="hidden" name="id" value="{{ id }}">
-                <label>Name:</label>
-                <input type="text" name="name" value="{{ name }}"/>
-                </div>
-                <div class="four wide field">
-                  <label>Type:</label>
-                  <select class="ui fluid dropdown" name="type">
-                    <option value="Savings">Savings</option>
-                    <option value="Checkings">Checkings</option>
-                    <option value="Credit Card">Credit Card</option>                    
-                  </select>
-                </div>                                 
-            <input type="submit" class="ui teal submit button"  placeholder="Submit"/>
-            </form>
-    </body>
-</html>
+<form class="ui center aligned form" action="/accounts/save" method="POST">
+    <div class="required four wide field">
+        <input type="hidden" name="id" value="{{ id }}">
+        <label>Name:</label>
+        <input type="text" name="name" value="{{ name }}"/>
+        </div>
+        <div class="four wide field">
+          <label>Type:</label>
+          <select class="ui fluid dropdown" name="type">
+            <option value="Checkings">Checkings</option>
+            <option value="Credit Card">Credit Card</option>
+            <option value="Savings">Savings</option>                                        
+          </select>
+        </div>                                 
+    <input type="submit" class="ui teal submit button"  placeholder="Submit"/>
 </form>
 {% endblock %}
