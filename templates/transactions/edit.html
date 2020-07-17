@@ -39,7 +39,7 @@
     <input type="submit" class="ui teal submit button"  placeholder="Submit"/>
 </form>
 <script>
-{% if destination_accnt_id == "" %}
+{% if destination_accnt_id is none or destination_accnt_id == "" %}
 let destinationAccntID = -1;
 {% else %}
 let destinationAccntID = {{destination_accnt_id}};
