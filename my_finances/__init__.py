@@ -1,5 +1,5 @@
 import mysql.connector
-from config import *
+from .config import *
 from flask import Flask
 from flask import render_template
 from flask import request
@@ -11,7 +11,6 @@ from datetime import date
 from datetime import datetime
 import re
 import hashlib
-
 
 app = Flask(__name__)
 
@@ -107,7 +106,12 @@ def save_transactions():
         value = value.replace(",",".")
     else:
         value = value.replace(",","")
-    if request.form["source_accnt_id"] == request.form["destination_accnt_id"]:
+
+    destination_accnt_id = None
+    if "destination_accnt_id" in request.form:
+        destination_accnt_id = request.form["destination_accnt_id"]
+
+    if request.form["source_accnt_id"] == destination_accnt_id:
         return "Source account and destination account can not be the same."
     date = request.form["date"] 
     if session['preference']== "pt-br":
@@ -129,11 +133,11 @@ def save_transactions():
         return "Sorry, there was an error."
     if request.form["id"] != "":      
         update_transaction = ("update transactions set description=%s,category_id=%s,date=%s,value=%s,source_accnt_id=%s,destination_accnt_id=%s where id=%s and user_id = %s")
-        transaction_data = (request.form["description"],category_id,date,value,request.form["source_accnt_id"],request.form["destination_accnt_id"],request.form["id"],session["id"])
-        cursor.execute(update_transaction, transaction_data) 
+        transaction_data = (request.form["description"],category_id,date,value,request.form["source_accnt_id"],destination_accnt_id,request.form["id"],session["id"])
+        cursor.execute(update_transaction, transaction_data)
     else:
         insert_transaction = ("insert into transactions(description,user_id,category_id,date,value,source_accnt_id,destination_accnt_id) values(%s,%s,%s,%s,%s,%s,%s)")                
-        transaction_data = (request.form["description"],session["id"],category_id,date,value,request.form["source_accnt_id"],request.form["destination_accnt_id"])
+        transaction_data = (request.form["description"],session["id"],category_id,date,value,request.form["source_accnt_id"],destination_accnt_id)
         cursor.execute(insert_transaction, transaction_data)
     cnx.commit()
     cnx.close()
