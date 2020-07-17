@@ -57,7 +57,7 @@ def new_transaction():
     cursor.execute(select_accounts,account_data)
     all_accounts = cursor.fetchall()
     cnx.close()
-    return render_template("transactions/edit.html", categories=all_categories, date= datetime.now(), accounts=all_accounts)
+    return render_template("transactions/edit.html", categories=all_categories, date= datetime.now(), destination_accnt_id=None, accounts=all_accounts)
 
 @app.route('/transactions/<id>')
 @login_required
