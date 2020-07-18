@@ -1,6 +1,10 @@
-/env
-config.py 
-*.egg-info
 __pycache__
-venv
 .vscode
+*.egg-info
+*.pyc
+/env
+build/
+config.py 
+dist/
+instance/
+venv
