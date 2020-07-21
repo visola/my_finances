@@ -46,7 +46,7 @@
                         {{ transaction.date.strftime('%d/%m/%Y') }}
                     </td>
                     <td>
-                        $ {{ transaction.value }}
+                        {{ format_currency(transaction.value) }}
                     </td>
                     <td>
                         {{ transaction.source_account }}

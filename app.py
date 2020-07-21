@@ -103,6 +103,7 @@ def save_transactions():
     value = request.form["value"]
     if value == "":
         return "Value can not be empty."
+    #TODO: use session preference to define value {validate if string is correct}
     if re.match(",\d{0,2}$",value):
         value = value.replace(".","").replace(",",".")
     else:
@@ -110,9 +111,11 @@ def save_transactions():
     if request.form["source_accnt_id"] == request.form["destination_accnt_id"]:
         return "Source account and destination account can not be the same."
     date = request.form["date"]
+    #TODO: validar que a data esta de acordo com a preferencia e usar o formato correto 
     if re.match("\\d{2}/\\d{2}/\\d{4}", date) is not None:
         date = datetime.strptime(request.form["date"],'%d/%m/%Y')
     else:
+        #TODO: consertar mensagem de erro
         return f"'{date}' Is not in the format dd/mm/yyyy"
     category_id = request.form['category_id']
     if category_id == "-1":
@@ -376,16 +379,23 @@ def save_preferences():
     session['preference'] = request.form["preference"]
     return redirect(url_for("profile_page"))
 
-# @app.context_processor
-# def numbers_processor(value):
-#     user_config = ("select value from transactions where user_id = %s")
-#      = (session["id"],)
-#     value = request.form["value"]
-#     if request.form["preference"] == "en-us":
-#         value = "$" + '{0:.2f}{1}'.format(value)
-#     elif request.form["preference"] == "pt-br":
-#         value = "R$" + '{0:,2f}{1}'.format(value)
-#     else:
-#         # return "error"
 
+@app.context_processor
+def formatters():
+    def format_currency(value):
+        preference = session['preference']
+        if preference == "pt-br":
+            return "R$ " + str(value).replace(".",",")
+        return "$ {0:.2f}".format(value) 
+
+    def format_number(value):
+        preference = session['preference']
+        if preference == "pt-br":
+            return  str(value).replace(".",",")
+        return "{0:.2f}".format(value)  
+
+    def format_date(date):
+        return "nothing"
+
+    return dict(format_currency=format_currency,format_number = format_number,format_date=format_date)
 
