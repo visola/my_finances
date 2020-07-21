@@ -37,7 +37,7 @@ def list_transactions():
     cursor.execute(select_transactions,session_id_data)
     all_transactions = []
     for row in cursor:
-        all_transactions.append({"id": row[0], "description": row[1], "category": row[2], "date": row[3], "value": row[4], "source_account":row[5], "destination_account":row[6]})
+        all_transactions.append({"id": row[0], "description": row[1], "category": row[2], "date": row[3], "value": row[4] , "source_account":row[5], "destination_account":row[6]})
     cnx.close() 
     return render_template("transactions/index.html", transactions=all_transactions)
 
@@ -100,9 +100,13 @@ def save_transactions():
     cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
-    value = request.form["value"].replace(".","").replace(",",".")
+    value = request.form["value"]
     if value == "":
-        return "Value can not be empty."    
+        return "Value can not be empty."
+    if re.match(",\d{0,2}$",value):
+        value = value.replace(".","").replace(",",".")
+    else:
+        value = value.replace(",","")        
     if request.form["source_accnt_id"] == request.form["destination_accnt_id"]:
         return "Source account and destination account can not be the same."
     date = request.form["date"]
@@ -121,10 +125,10 @@ def save_transactions():
     if cursor.rowcount == 0 and category_id is not None:
         cnx.close()
         return "Sorry, there was an error."
-    if request.form["id"] != "":        
+    if request.form["id"] != "":      
         update_transaction = ("update transactions set description=%s,category_id=%s,date=%s,value=%s,source_accnt_id=%s,destination_accnt_id=%s where id=%s and user_id = %s")
         transaction_data = (request.form["description"],category_id,date,value,request.form["source_accnt_id"],request.form["destination_accnt_id"],request.form["id"],session["id"])
-        cursor.execute(update_transaction, transaction_data)
+        cursor.execute(update_transaction, transaction_data) 
     else:
         insert_transaction = ("insert into transactions(description,user_id,category_id,date,value,source_accnt_id,destination_accnt_id) values(%s,%s,%s,%s,%s,%s,%s)")                
         transaction_data = (request.form["description"],session["id"],category_id,date,value,request.form["source_accnt_id"],request.form["destination_accnt_id"])
@@ -176,16 +180,20 @@ def login():
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    select_users = ("select id, name from users where email=%s and password=%s")
+    select_users = ("select u.id,u.name,p.preference from users u left outer join preferences p on p.user_id = u.id where email=%s and password=%s ")
     password= hashlib.sha256(request.form["password"].encode("utf-8")).hexdigest()
     email_data = (request.form["email"],password)
     cursor.execute(select_users, email_data)
     row = cursor.fetchone()
     cnx.close()
-    if row is not None :
+    if row is not None:
         session['email'] = request.form['email']
         session['id'] = row[0]
         session['name'] = row[1]
+        if row[2] is None:
+            session['preference'] = "en-us"
+        else:
+            session['preference'] = row[2]
         return redirect(url_for("dashboard"))
     return redirect(url_for("get_login"))
 
@@ -309,3 +317,75 @@ def save_accounts():
     if cursor.rowcount == 0:
         return "Sorry, there was an error."
     return redirect(url_for("list_accounts"))
+
+
+@app.route('/profile')
+@login_required
+def profile_page():
+    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
+                                host=MYSQL_HOST,
+                                database=MYSQL_DATABASE)
+    cursor = cnx.cursor()
+    select_preference = ("select preference from preferences where user_id=%s")
+    preference_data = (session["id"],)
+    cursor.execute(select_preference, preference_data)
+    row = cursor.fetchone()
+    cnx.close()
+    if row is None:
+        return render_template("profile/index.html", preference=session['preference'])
+    return render_template("profile/index.html", preference = row[0])
+
+@app.route('/preference/new')
+@login_required
+def new_preference():
+    return render_template("profile/preferences/edit.html")
+
+@app.route('/profile/prefences')
+@login_required
+def user_prefences():
+    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
+                                host=MYSQL_HOST,
+                                database=MYSQL_DATABASE)
+    cursor = cnx.cursor()
+    select_preference = ("select preference from preferences where user_id=%s")
+    preference_data = (session["id"],)
+    cursor.execute(select_preference, preference_data)
+    row = cursor.fetchone()
+    cnx.close()
+    if row is None:
+        return render_template("profile/preferences.edit.html", preference = session['preference'] )
+    return render_template("profile/preferences.edit.html", preference = row[0])
+
+@app.route('/preferences/save',methods=["POST"])
+@login_required
+def save_preferences():
+    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
+                                host=MYSQL_HOST,
+                                database=MYSQL_DATABASE)
+    cursor = cnx.cursor()
+    if request.form["exists"] == "True": 
+        update_preferences = ("update preferences set preference=%s where user_id = %s")
+        preference_data = (request.form["preference"],session["id"])
+        cursor.execute(update_preferences, preference_data)
+    else:
+        insert_preferences = ("insert into preferences(user_id,preference) values(%s,%s)")
+        preference_data = (session["id"],request.form["preference"])
+        cursor.execute(insert_preferences, preference_data)
+    cnx.commit()
+    cnx.close()
+    session['preference'] = request.form["preference"]
+    return redirect(url_for("profile_page"))
+
+# @app.context_processor
+# def numbers_processor(value):
+#     user_config = ("select value from transactions where user_id = %s")
+#      = (session["id"],)
+#     value = request.form["value"]
+#     if request.form["preference"] == "en-us":
+#         value = "$" + '{0:.2f}{1}'.format(value)
+#     elif request.form["preference"] == "pt-br":
+#         value = "R$" + '{0:,2f}{1}'.format(value)
+#     else:
+#         # return "error"
+
+

@@ -1,0 +1,14 @@
+{% extends "base/layout_edit.html" %}
+{% block content %}
+<form class="ui center aligned form" action="/preferences/save" method="POST">
+<input type="hidden" name="exists" value="{{preference is not none }}"/>
+<div class="four wide field">
+    <label>Preference:</label>
+    <select class="ui fluid dropdown" name="preference">
+        <option value="en-us" {{'selected' if preference == "en-us"}}> English - us </option>
+        <option value="pt-br" {{'selected' if preference == "pt-br"}}> Português - br </option>
+    </select>
+</div>
+<input type="submit" class="ui teal submit button"  placeholder="Submit"/>
+</form>
+{% endblock %}
