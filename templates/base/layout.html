@@ -4,12 +4,13 @@
     </head>
 <body>
     <div class= "ui inverted menu ">
-    <div class="ui center aligned teal  header item">My Finances</div>
-        <a class="item " href="/dashboard">{{session['name']}}</a>
+        <a class="ui center aligned teal  header item" href="/dashboard">My Finances</a>
+        <a class="item " href="/profile">{{session['name']}}</a>
         <a class="item" href="/logout">Log out</a>
     </div>
     <div class="ui visible right demo vertical inverted sidebar labeled menu">
       <a class="item" href="/dashboard"> Home Page</a>
+      <a class="item" href="/profile"> Profile</a>
       <a class="item" href="/transactions"> Transactions</a>
       <a class="item" href="/categories"> Categories</a>
       <a class="item" href="/accounts"> Accounts</a>
