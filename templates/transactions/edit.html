@@ -17,7 +17,7 @@
       </div> 
           <div class="required four wide field">                    
             <label>Date:</label>
-            <input type="text" name="date" value="{{ date.strftime('%d/%m/%Y') }}"/>
+            <input type="text" name="date" value="{{ format_date(date) }}"/>
             </div>
           <div class="required four wide field">                    
             <label>Value:</label>

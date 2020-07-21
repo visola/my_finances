@@ -103,20 +103,19 @@ def save_transactions():
     value = request.form["value"]
     if value == "":
         return "Value can not be empty."
-    #TODO: use session preference to define value {validate if string is correct}
-    if re.match(",\d{0,2}$",value):
-        value = value.replace(".","").replace(",",".")
+    if session['preference'] == "pt-br":
+        value = value.replace(",",".")
     else:
-        value = value.replace(",","")        
+        value = value.replace(",","")
     if request.form["source_accnt_id"] == request.form["destination_accnt_id"]:
         return "Source account and destination account can not be the same."
-    date = request.form["date"]
-    #TODO: validar que a data esta de acordo com a preferencia e usar o formato correto 
-    if re.match("\\d{2}/\\d{2}/\\d{4}", date) is not None:
+    date = request.form["date"] 
+    if session['preference']== "pt-br":
         date = datetime.strptime(request.form["date"],'%d/%m/%Y')
+    elif session['preference'] == "en-us":
+        date = datetime.strptime(request.form["date"],'%m/%d/%Y')
     else:
-        #TODO: consertar mensagem de erro
-        return f"'{date}' Is not in the format dd/mm/yyyy"
+        return f"'{date}' Is not according to format."
     category_id = request.form['category_id']
     if category_id == "-1":
         category_id = None
@@ -138,8 +137,6 @@ def save_transactions():
         cursor.execute(insert_transaction, transaction_data)
     cnx.commit()
     cnx.close()
-    if cursor.rowcount == 0:
-        return "Sorry, there was an error."
     return redirect(url_for("list_transactions"))
 
 @app.route('/users/new')
@@ -254,8 +251,6 @@ def save_categories():
         cursor.execute(insert_category, category_data)
     cnx.commit()
     cnx.close()
-    if cursor.rowcount == 0:
-        return "Sorry, there was an error."
     return redirect(url_for("list_categories"))
 
 @app.route('/dashboard')
@@ -317,8 +312,6 @@ def save_accounts():
         cursor.execute(insert_accounts, account_data)
     cnx.commit()
     cnx.close()
-    if cursor.rowcount == 0:
-        return "Sorry, there was an error."
     return redirect(url_for("list_accounts"))
 
 
@@ -395,7 +388,10 @@ def formatters():
         return "{0:.2f}".format(value)  
 
     def format_date(date):
-        return "nothing"
+        preference = session['preference']
+        if preference == "pt-br":
+            return datetime.strftime(date,'%d/%m/%Y')
+        return datetime.strftime(date,'%m/%d/%Y')
 
     return dict(format_currency=format_currency,format_number = format_number,format_date=format_date)
 

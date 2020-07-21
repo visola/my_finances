@@ -43,7 +43,7 @@
                         {{ transaction.category }}
                     </td>
                     <td>
-                        {{ transaction.date.strftime('%d/%m/%Y') }}
+                        {{ format_date(transaction.date) }}
                     </td>
                     <td>
                         {{ format_currency(transaction.value) }}
