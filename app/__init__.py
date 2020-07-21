@@ -11,6 +11,7 @@ from datetime import date
 from datetime import datetime
 import re
 import hashlib
+import decimal
 
 app = Flask(__name__)
 
@@ -386,6 +387,8 @@ def formatters():
         return "$ {0:.2f}".format(value) 
 
     def format_number(value):
+        if not isinstance(value, decimal.Decimal):
+            value = 0.0
         preference = session['preference']
         if preference == "pt-br":
             return  str(value).replace(".",",")
