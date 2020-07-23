@@ -261,7 +261,24 @@ def save_categories():
 @app.route('/dashboard')
 @login_required
 def dashboard():
-    return render_template("home_page/index.html")
+    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
+                                host=MYSQL_HOST,
+                                database=MYSQL_DATABASE)
+    cursor = cnx.cursor()
+    count = ("select count(t.id),c.category from transactions t join categories c where t.category_id=c.id and t.user_id =%s group by t.category_id  order by c.category asc")
+    select_count= (session["id"],)
+    cursor.execute(count,select_count)
+    counts = []
+    for row in cursor:
+        counts.append({"count": row[0], "category": row[1]})
+    count_a = ("select count(t.id),a.name from transactions t join accounts a where t.source_accnt_id=a.id and t.user_id =%s group by t.source_accnt_id order by name asc")
+    select_count_a= (session["id"],)
+    cursor.execute(count_a,select_count_a)
+    all_accounts = []
+    for row in cursor:
+        all_accounts.append({"count": row[0], "account": row[1]})
+    cnx.close() 
+    return render_template("home_page/index.html", count_categories=counts, count_accounts=all_accounts)
 
 @app.route('/accounts')
 @login_required

@@ -3,4 +3,32 @@
 <h1>
     Welcome {{session['name']}}!
 </h1>
+<div class="ui teal floated segment">
+    <div class="ui two column very relaxed grid">
+      <div class="column">
+        <h2 class="ui left floated header">Categories</h2>
+        <div class="ui clearing divider"></div>
+        <p>
+          {% for category in count_categories %}       
+            <h4>{{category.category}}</h4>     
+            <p> {{category.count}} transactions in this category.</p>
+            <div class="ui clearing divider"></div>
+          {% endfor %}
+        </p>
+      </div>
+      <div class="column">
+        <h2 class="ui left floated header">Accounts</h2>
+        <div class="ui clearing divider"></div>
+        <p>
+          {% for account in count_accounts %}
+            <h4>{{account.account}}</h4>
+            <p>{{account.count}} transactions in this account.</p>
+            <div class="ui clearing divider"></div>
+          {% endfor %}
+        </p>
+      </div>
+    </div>
+    <div class="ui vertical divider">
+    </div>
+</div>
 {% endblock %}
