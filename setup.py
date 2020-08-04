@@ -11,5 +11,6 @@ setup(
       'Flask==1.1.2',
       'gunicorn',
       'mysql-connector-python==8.0.20',
+      'pylint>=2',
     ]
 )
