@@ -6,17 +6,6 @@
 <div class="ui teal floated segment">
     <div class="ui two column very relaxed grid">
       <div class="column">
-        <h2 class="ui left floated header">Categories</h2>
-        <div class="ui clearing divider"></div>
-        <p>
-          {% for category in count_categories %}       
-            <h4>{{category.category}}</h4>     
-            <p> {{category.count}} transactions in this category on the last 30 days.</p>
-            <div class="ui clearing divider"></div>
-          {% endfor %}
-        </p>
-      </div>
-      <div class="column">
         <h2 class="ui left floated header">Accounts</h2>
         <div class="ui clearing divider"></div>
         <p>
@@ -26,6 +15,18 @@
             <div class="ui clearing divider"></div>
           {% endfor %}
         </p>
+      </div>
+      <div class="column">
+        <h2 class="ui left floated header">Categories</h2>
+        <div class="ui clearing divider"></div>
+        <p>
+          {% for category in count_categories %}       
+            <h4>{{category.category}}</h4>     
+            <p> {{category.count}} transactions in this category on the last 30 days.</p>
+            <div class="ui clearing divider"></div>
+          {% endfor %}
+        </p>
+        <!-- TODO: se nao houver categorias informar que não há transacoes categorizadas nos ultimos 30 dias;  -->
       </div>
     </div>
     <div class="ui vertical divider">
