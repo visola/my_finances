@@ -53,11 +53,15 @@ accounts.push({id:{{account[0]}},name:'{{account[1]}}'});
 let destinationAccountCombo = document.querySelector('[name=destination_accnt_id]');
 function createDestinationOptions(sourceAccntID){
   let options = '<option value="-1">None</option>';
-accounts.forEach((a) => {
-  if (a.id != sourceAccntID) {
-    options += `<option value="${a.id}">${a.name}</option>`;
-  }
-})
+  accounts.forEach((a) => {
+    if (a.id != sourceAccntID) {
+      if (a.id==destinationAccntID) {
+        options  += `<option selected value="${a.id}">${a.name}</option>`;
+      } else {
+        options  += `<option value="${a.id}">${a.name}</option>`;
+      }
+    } 
+  })
   destinationAccountCombo.innerHTML = options;
 }
 

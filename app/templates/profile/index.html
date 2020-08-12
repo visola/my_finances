@@ -1,15 +1,17 @@
 {% extends "base/layout.html" %}
 {% block content %}
 <h1>Hello {{session['name']}}, welcome to your profile page.</h1>
-<h2>Your preferences:</h2>
-{% if preference == "en-us" %}
-<h3>Date: month/day/year</h3>
-<h3>Numbers: 0.00 </h3>
-<h3>Currency: $ (us dollar)</h3>
-{% elif preference == "pt-br" %}
-<h3>Date: day/month/year</h3>
-<h3>Numbers: 0,00 </h3>
-<h3>Currency: R$ (reais)</h3>
-{% endif %}
-<a href="/profile/prefences">Edit prefences</a>
+<div class="ui teal floated segment"> 
+    <h2>Your preferences:</h2>
+    {% if preference == "en-us" %}
+    <h3>Date: month/day/year</h3>
+    <h3>Numbers: 0.00 </h3>
+    <h3>Currency: $ (us dollar)</h3>
+    {% elif preference == "pt-br" %}
+    <h3>Date: day/month/year</h3>
+    <h3>Numbers: 0,00 </h3>
+    <h3>Currency: R$ (reais)</h3>
+    {% endif %}
+    <a href="/profile/prefences">Edit prefences</a>
+</div>
 {% endblock %}
