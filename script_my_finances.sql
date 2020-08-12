@@ -5,8 +5,8 @@ create table transactions (
   category_id int,
   date date,
   value decimal(12,2) not null,
-  destination_accnt_id int,
   source_accnt_id int not null,
+  link_id varchar(150),
   primary key(id)
 );
 
