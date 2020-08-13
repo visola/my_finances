@@ -66,7 +66,23 @@ def parse_date(date_string):
 
 def save_transaction(cursor, *, account_id, category_id, description, link_id,
                      transaction_date, transaction_id, user_id, value):
-    if transaction_id != "":
+    if transaction_id == "" or transaction_id is None:
+        insert_transaction = ('''
+            insert into transactions
+            (description, user_id, category_id, date, value, source_accnt_id, link_id)
+            values (%s, %s, %s, %s, %s, %s, %s)
+        ''')
+        transaction_data = (
+            description,
+            user_id,
+            category_id,
+            transaction_date,
+            value,
+            account_id,
+            link_id
+        )
+        cursor.execute(insert_transaction, transaction_data)
+    else:
         update_transaction = ('''
             update transactions
             set description=%s, category_id=%s, date=%s, value=%s, source_accnt_id=%s, link_id=%s
@@ -84,22 +100,6 @@ def save_transaction(cursor, *, account_id, category_id, description, link_id,
             user_id
         )
         cursor.execute(update_transaction, transaction_data)
-    else:
-        insert_transaction = ('''
-            insert into transactions
-            (description, user_id, category_id, date, value, source_accnt_id, link_id)
-            values (%s, %s, %s, %s, %s, %s, %s)
-        ''')
-        transaction_data = (
-            description,
-            user_id,
-            category_id,
-            transaction_date,
-            value,
-            account_id,
-            link_id
-        )
-        cursor.execute(insert_transaction, transaction_data)
 
 def validate_accounts(cursor, *account_ids, user_id):
     for account_id in account_ids:
@@ -299,7 +299,7 @@ def post_transactions():
             description=request.form["description"],
             link_id=link_id,
             transaction_date=transaction_date,
-            transaction_id=request.form["id"],
+            transaction_id=reverse_transaction_id,
             user_id=session["id"],
             value=value * -1,
         )
