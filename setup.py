@@ -1,4 +1,15 @@
+from os import path
 from setuptools import setup
+
+if not path.exists('app/config.py'):
+    with open('app/config.py', 'w') as f:
+      f.write('''
+MYSQL_DATABASE='{DATABASE_NAME}'
+MYSQL_HOST='{DATABASE_HOST}'
+MYSQL_PASSWORD='{DATABASE_PASSWORD}'
+MYSQL_USER='{DATABASE_USERNAME}'
+MSQL_SECRET_KEY='{CRYPTO_KEY_FOR_SESSION}'
+      ''')
 
 setup(
     name='my_finances',
@@ -11,5 +22,6 @@ setup(
       'Flask==1.1.2',
       'gunicorn',
       'mysql-connector-python==8.0.20',
+      'pylint>=2',
     ]
 )
