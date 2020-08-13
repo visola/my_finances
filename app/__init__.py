@@ -29,6 +29,105 @@ def login_required(function_to_wrap):
         return redirect(url_for("get_login"))
     return decorated_function
 
+def find_linked_transaction(cursor, transaction_id, user_id):
+    select_transaction = ('''
+        SELECT t.id, t.link_id, r.id
+        FROM transactions t
+        LEFT OUTER JOIN transactions r
+            ON r.link_id = t.link_id
+            and t.link_id IS NOT NULL
+            AND t.user_id = r.user_id
+            and t.id<>r.id
+        WHERE t.id = %s AND t.user_id = %s
+    ''')
+    transaction_data = (transaction_id, user_id)
+    cursor.execute(select_transaction, transaction_data)
+    row = cursor.fetchone()
+
+    if cursor.rowcount == 0:
+        return False, None, None
+
+    return True, row[1], row[2]
+
+def parse_currency(value):
+    if value == "":
+        return False, None
+
+    if session['preference'] == "pt-br":
+        return True, float(value.replace(",", "."))
+
+    return True, float(value.replace(",", ""))
+
+def parse_date(date_string):
+    if session['preference'] == "pt-br":
+        return True, datetime.strptime(date_string, '%d/%m/%Y')
+
+    return True, datetime.strptime(date_string, '%m/%d/%Y')
+
+def save_transaction(cursor, *, account_id, category_id, description, link_id,
+                     transaction_date, transaction_id, user_id, value):
+    if transaction_id != "":
+        update_transaction = ('''
+            update transactions
+            set description=%s, category_id=%s, date=%s, value=%s, source_accnt_id=%s, link_id=%s
+            where id=%s
+                and user_id = %s
+        ''')
+        transaction_data = (
+            description,
+            category_id,
+            transaction_date,
+            value,
+            account_id,
+            link_id,
+            transaction_id,
+            user_id
+        )
+        cursor.execute(update_transaction, transaction_data)
+    else:
+        insert_transaction = ('''
+            insert into transactions
+            (description, user_id, category_id, date, value, source_accnt_id, link_id)
+            values (%s, %s, %s, %s, %s, %s, %s)
+        ''')
+        transaction_data = (
+            description,
+            user_id,
+            category_id,
+            transaction_date,
+            value,
+            account_id,
+            link_id
+        )
+        cursor.execute(insert_transaction, transaction_data)
+
+def validate_accounts(cursor, *account_ids, user_id):
+    for account_id in account_ids:
+        if account_id is None or int(account_id) == -1:
+            continue
+
+        print(f"Validating account '{account_id}'")
+        validate_source_accnt = ("select id from accounts where id = %s and user_id = %s")
+        source_accnt_data = (account_id, user_id)
+        cursor.execute(validate_source_accnt, source_accnt_data)
+        cursor.fetchone()
+        if cursor.rowcount == 0:
+            return False
+    return True
+
+def validate_categories(cursor, *category_ids, user_id):
+    for category_id in category_ids:
+        if category_id is None or int(category_id) == -1:
+            continue
+
+        select_categories = ("select category from categories where user_id=%s and id=%s")
+        categories_data = (user_id, category_id)
+        cursor.execute(select_categories, categories_data)
+        cursor.fetchone()
+        if cursor.rowcount == 0:
+            return False
+    return True
+
 @app.route('/transactions')
 @login_required
 def list_transactions():
@@ -131,117 +230,61 @@ def edit_transaction(transaction_id):
 
 @app.route('/transactions/save', methods=["POST"])
 @login_required
-def save_transactions():
+def post_transactions():
     cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
                                   host=MYSQL_HOST,
                                   database=MYSQL_DATABASE)
     cursor = cnx.cursor()
 
-    passed_id = request.form["id"]
-
-    value = request.form["value"]
-    if value == "":
+    valid, value = parse_currency(request.form["value"])
+    if not valid:
         return "Value can not be empty."
-    if session['preference'] == "pt-br":
-        value = value.replace(",", ".")
-    else:
-        value = value.replace(",", "")
-    reverse_value = float(value)*-1.0
 
-    transaction_date = request.form["date"]
-    if session['preference'] == "pt-br":
-        transaction_date = datetime.strptime(request.form["date"], '%d/%m/%Y')
-    elif session['preference'] == "en-us":
-        transaction_date = datetime.strptime(request.form["date"], '%m/%d/%Y')
-    else:
-        return f"'{transaction_date}' Is not according to format."
+    valid, transaction_date = parse_date(request.form["date"])
+    if not valid:
+        return f"'{request.form['date']}' Is not according to format."
+
+    if not validate_accounts(
+            cursor,
+            request.form["source_accnt_id"],
+            request.form["destination_accnt_id"],
+            user_id=session["id"]
+        ):
+        cnx.close()
+        return "Sorry, there was an error. Invalid account ID."
+
     category_id = request.form['category_id']
-    if category_id == "-1":
-        category_id = None
-
-    validate_source_accnt = ("select id from accounts where id = %s and user_id = %s")
-    source_accnt_data = (request.form["source_accnt_id"], session["id"])
-    cursor.execute(validate_source_accnt, source_accnt_data)
-    cursor.fetchone()
-    if cursor.rowcount == 0:
+    if not validate_categories(cursor, category_id, user_id=session["id"]):
         cnx.close()
-        return "Sorry, there was an error. 1"
-    if request.form["destination_accnt_id"] != "-1":
-        validate_destination_accnt = ("select id from accounts where id = %s and user_id = %s")
-        destination_accnt_data = (request.form["destination_accnt_id"], session["id"])
-        cursor.execute(validate_destination_accnt, destination_accnt_data)
-        cursor.fetchone()
-        if cursor.rowcount == 0:
-            cnx.close()
-            return "Sorry, there was an error. 2"
-
-    select_categories = ("select category from categories where user_id=%s and id=%s")
-    categories_data = (session["id"], category_id)
-    cursor.execute(select_categories, categories_data)
-    cursor.fetchone()
-    if cursor.rowcount == 0 and category_id is not None:
-        cnx.close()
-        return "Sorry, there was an error. 3"
+        return "Sorry, there was an error. Invalid category ID."
 
     reverse_transaction_id = None
     link_id = None
-    if passed_id != "":
-        select_transaction = ('''
-            SELECT t.id, t.link_id, r.id
-            FROM transactions t
-            LEFT OUTER JOIN transactions r
-                ON r.link_id = t.link_id
-                and t.link_id IS NOT NULL
-                AND t.user_id = r.user_id
-                and t.id<>r.id
-            WHERE t.id = %s AND t.user_id = %s
-        ''')
-        transaction_data = (passed_id, session["id"])
-        cursor.execute(select_transaction, transaction_data)
-        row = cursor.fetchone()
-        if cursor.rowcount == 0:
+    if request.form["id"] != "":
+        valid, link_id, reverse_transaction_id = find_linked_transaction(
+            cursor,
+            request.form["id"],
+            session["id"]
+        )
+
+        if not valid:
             cnx.close()
-            return "Sorry, there was an error. 4"
-        link_id = row[1]
-        reverse_transaction_id = row[2]
+            return "Sorry, there was an error. Invalid transaction ID."
 
     if request.form["destination_accnt_id"] != "-1" and link_id is None:
         link_id = str(uuid.uuid4())
 
-    if passed_id != "":
-        update_transaction = ('''
-            update transactions
-            set description=%s, category_id=%s, date=%s, value=%s, source_accnt_id=%s, link_id=%s
-            where id=%s
-                and user_id = %s
-        ''')
-        transaction_data = (
-            request.form["description"],
-            category_id,
-            transaction_date,
-            value,
-            request.form["source_accnt_id"],
-            link_id,
-            request.form["id"],
-            session["id"]
-        )
-        cursor.execute(update_transaction, transaction_data)
-    else:
-        insert_transaction = ('''
-            insert into transactions
-            (description, user_id, category_id, date, value, source_accnt_id, link_id)
-            values (%s, %s, %s, %s, %s, %s, %s)
-        ''')
-        transaction_data = (
-            request.form["description"],
-            session["id"],
-            category_id,
-            transaction_date,
-            value,
-            request.form["source_accnt_id"],
-            link_id
-        )
-        cursor.execute(insert_transaction, transaction_data)
+    save_transaction(
+        cursor,
+        account_id=request.form["source_accnt_id"],
+        category_id=category_id,
+        description=request.form["description"],
+        link_id=link_id,
+        transaction_date=transaction_date,
+        transaction_id=request.form["id"],
+        user_id=session["id"],
+        value=value,
+    )
 
     if link_id is None:
         if reverse_transaction_id is not None:
@@ -249,39 +292,17 @@ def save_transactions():
             delete_data = (reverse_transaction_id, )
             cursor.execute(delete_linked_transactions, delete_data)
     else:
-        if reverse_transaction_id is not None:
-            update_transaction = ('''
-                update transactions
-                set description=%s, category_id=%s, date=%s, value=%s, source_accnt_id=%s, link_id=%s
-                where id=%s and user_id = %s
-            ''')
-            transaction_data = (
-                request.form["description"],
-                category_id,
-                transaction_date,
-                reverse_value,
-                request.form["destination_accnt_id"],
-                link_id,
-                reverse_transaction_id,
-                session["id"]
-            )
-            cursor.execute(update_transaction, transaction_data)
-        else:
-            insert_transaction = ('''
-                insert into transactions
-                (description,user_id,category_id,date,value,source_accnt_id,link_id)
-                values(%s,%s,%s,%s,%s,%s,%s)
-            ''')
-            transaction_data_insert = (
-                request.form["description"],
-                session["id"],
-                category_id,
-                transaction_date,
-                reverse_value,
-                request.form["destination_accnt_id"],
-                link_id
-            )
-            cursor.execute(insert_transaction, transaction_data_insert)
+        save_transaction(
+            cursor,
+            account_id=request.form["destination_accnt_id"],
+            category_id=category_id,
+            description=request.form["description"],
+            link_id=link_id,
+            transaction_date=transaction_date,
+            transaction_id=request.form["id"],
+            user_id=session["id"],
+            value=value * -1,
+        )
 
     cnx.commit()
     cnx.close()
