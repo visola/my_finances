@@ -21,8 +21,8 @@
         <div class="ui clearing divider"></div>
         <p>
           {% for category in count_categories %}       
-            <h4>{{category.category}}</h4>     
-            <p> {{category.count}} transactions in this category on the last 30 days.</p>
+            <h4>{{category}}</h4>     
+            <p> {{count_categories[category]}} transactions in this category on the last 30 days.</p>
             <div class="ui clearing divider"></div>
           {% endfor %}
         </p>

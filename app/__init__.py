@@ -326,14 +326,40 @@ def dashboard():
                                 host=MYSQL_HOST,
                                 database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    count_c = ("select count(t.id),c.category from transactions t join categories c where t.date between %s and %s and t.category_id=c.id and t.user_id =%s group by t.category_id  order by c.category asc")
+    count_c = ('''
+            select count(t.id),c.category
+            from transactions t
+            join categories c
+            where t.date between %s and %s
+            and t.category_id=c.id
+            and t.user_id =%s
+            group by t.category_id
+            order by c.category asc
+        ''')
     end_date_c = date.today()
     start_date_c= date.fromordinal(end_date_c.toordinal()-30) 
     select_count_c= (start_date_c,end_date_c,session["id"])
     cursor.execute(count_c,select_count_c)
-    all_categories = []
+    counts = {}
     for row in cursor:
-        all_categories.append({"count": row[0], "category": row[1]})
+        counts[row[1]]=row[0]
+    count_c = ('''
+            select count(t.id),c.category
+            from transactions t
+            join categories c
+            where t.date between %s and %s
+            and t.category_id=c.id
+            and t.user_id =%s
+            and link_id is not null
+            group by t.category_id
+            order by c.category asc
+        ''')
+    end_date_c = date.today()
+    start_date_c= date.fromordinal(end_date_c.toordinal()-30) 
+    select_count_c= (start_date_c,end_date_c,session["id"])
+    cursor.execute(count_c,select_count_c)
+    for row in cursor:
+        counts[row[1]]= counts[row[1]] - int(row[0]/2)
     count_a = ("select count(t.id),a.name from transactions t join accounts a where t.date between %s and %s and t.source_accnt_id=a.id and t.user_id =%s group by t.source_accnt_id order by name asc")
     end_date_a = date.today()
     start_date_a= date.fromordinal(end_date_c.toordinal()-30)
@@ -343,7 +369,7 @@ def dashboard():
     for row in cursor:
         all_accounts.append({"count": row[0], "account": row[1]})
     cnx.close() 
-    return render_template("home_page/index.html", count_categories=all_categories, count_accounts=all_accounts)
+    return render_template("home_page/index.html", count_categories=counts, count_accounts=all_accounts)
 
 #TODO: mostrar quantas transações não possuem categorias; 
 
