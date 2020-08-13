@@ -1,5 +1,7 @@
 # my_finances
 
+![Build](https://github.com/VinnieApps/my_finances/workflows/Build/badge.svg)
+
 ## local development
 
 ### banco de dados
