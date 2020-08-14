@@ -2,7 +2,6 @@ from datetime import date
 from datetime import datetime
 import decimal
 from functools import wraps
-import hashlib
 import re
 import uuid
 
@@ -16,6 +15,8 @@ import mysql.connector
 
 from .config import *
 
+from app.data_access.db import create_session
+from app.data_access.dao import UserDAO
 
 app = Flask(__name__)
 
@@ -314,23 +315,20 @@ def create_user():
 
 @app.route('/users/save', methods=["POST"])
 def save_users():
-    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                  host=MYSQL_HOST,
-                                  database=MYSQL_DATABASE)
-    cursor = cnx.cursor()
-    select_users = ("select count(1) from users where email=%s")
-    email_data = (request.form["email"],)
-    cursor.execute(select_users, email_data)
-    row = cursor.fetchone()
-    if row[0] > 0:
-        cnx.close()
+    db_session = create_session()
+    user_dao = UserDAO(db_session)
+
+    maybe_user = user_dao.find_by_email(request.form["email"])
+    if maybe_user is not None:
         return redirect(url_for("create_user"))
-    insert_user = ("insert into users(name,email,password) values(%s,%s,%s)")
-    password = hashlib.sha256(request.form["password"].encode("utf-8")).hexdigest()
-    user_data = (request.form["name"], request.form["email"], password)
-    cursor.execute(insert_user, user_data)
-    cnx.commit()
-    cnx.close()
+
+    user_dao.create(
+        email=request.form["email"],
+        name=request.form["name"],
+        password=request.form["password"],
+    )
+
+    db_session.commit()
     return redirect(url_for("list_transactions"))
 
 @app.route('/login', methods=["GET"])
@@ -345,31 +343,16 @@ def logout():
 
 @app.route('/login', methods=["POST"])
 def login():
-    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                  host=MYSQL_HOST,
-                                  database=MYSQL_DATABASE)
-    cursor = cnx.cursor()
-    select_users = ('''
-        select u.id,u.name,p.preference
-        from users u
-        left outer join preferences p on p.user_id = u.id
-        where email=%s and password=%s
-    ''')
-    password = hashlib.sha256(request.form["password"].encode("utf-8")).hexdigest()
-    email_data = (request.form["email"], password)
-    cursor.execute(select_users, email_data)
-    row = cursor.fetchone()
-    cnx.close()
-    if row is not None:
-        session['email'] = request.form['email']
-        session['id'] = row[0]
-        session['name'] = row[1]
-        if row[2] is None:
-            session['preference'] = "en-us"
-        else:
-            session['preference'] = row[2]
-        return redirect(url_for("dashboard"))
-    return redirect(url_for("get_login"))
+    maybe_user = UserDAO(create_session()) \
+        .find_by_email_and_password(request.form["email"], request.form["password"])
+
+    if maybe_user is None:
+        return redirect(url_for("get_login"))
+
+    session['email'] = maybe_user.email
+    session['id'] = maybe_user.id
+    session['name'] = maybe_user.name
+    return redirect(url_for("dashboard"))
 
 @app.route('/categories')
 @login_required
