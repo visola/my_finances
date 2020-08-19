@@ -1,6 +1,6 @@
 import hashlib
 
-from app.data_access.schema import User
+from app.data_access.schema import User, Category
 
 class UserDAO():
   def __init__(self, session):
@@ -24,3 +24,27 @@ class UserDAO():
           email=email,
           password=hashlib.sha256(password.encode("utf-8")).hexdigest(),
         ).first()
+
+
+class CategoryDAO():
+  def __init__(self, session):
+    self.session = session
+
+  def save(self, *, id=None, name, user_id):
+      self.session.add(Category(
+        id=id,
+        name=name,
+        user_id=user_id
+      ))
+
+  def find_by_user_id(self,user_id):
+    return self.session.query(Category) \
+      .filter_by(user_id=user_id) \
+      .all()
+
+  def find_by_id_and_user_id(self,id,user_id):
+    return self.session.query(Category) \
+      .filter_by(
+        id=id,
+        user_id=user_id
+      ).first()

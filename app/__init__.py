@@ -16,7 +16,7 @@ import mysql.connector
 from .config import *
 
 from app.data_access.db import create_session
-from app.data_access.dao import UserDAO
+from app.data_access.dao import UserDAO, CategoryDAO
 
 app = Flask(__name__)
 
@@ -357,18 +357,12 @@ def login():
 @app.route('/categories')
 @login_required
 def list_categories():
-    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                  host=MYSQL_HOST,
-                                  database=MYSQL_DATABASE)
-    cursor = cnx.cursor()
-    select_categories = ("select * from categories where user_id=%s")
-    session_id_data = (session["id"],)
-    cursor.execute(select_categories, session_id_data)
-    all_categories = []
-    for row in cursor:
-        all_categories.append({"id": row[0], "description": row[1]})
-    cnx.close()
-    return render_template("categories/index.html", categories=all_categories)
+    db_session = create_session()
+    categories_dao = CategoryDAO(db_session)
+
+    categories = categories_dao.find_by_user_id(session["id"])    
+    
+    return render_template("categories/index.html", categories=categories)
 
 @app.route('/categories/new')
 @login_required
@@ -378,36 +372,31 @@ def new_category():
 @app.route('/categories/<category_id>')
 @login_required
 def edit_category(category_id):
-    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                  host=MYSQL_HOST,
-                                  database=MYSQL_DATABASE)
-    cursor = cnx.cursor()
-    select_category = ("select * from categories where id=%s and user_id=%s")
-    category_data = (int(category_id), session["id"])
-    cursor.execute(select_category, category_data)
-    row = cursor.fetchone()
-    cnx.close()
-    if row is None:
-        return "Page not found."
-    return render_template("categories/edit.html", id=row[0], category=row[1])
+    db_session = create_session()
+    categories_dao = CategoryDAO(db_session)
+
+    categories = categories_dao.find_by_id_and_user_id(category_id, session["id"])
+
+    return render_template("categories/edit.html", categories=categories)
 
 @app.route('/categories/save', methods=["POST"])
 @login_required
 def save_categories():
-    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                  host=MYSQL_HOST,
-                                  database=MYSQL_DATABASE)
-    cursor = cnx.cursor()
-    if request.form["id"] != "":
-        update_category = ("update categories set category=%s where id=%s and user_id = %s")
-        category_data = (request.form["category"], request.form["id"], session["id"])
-        cursor.execute(update_category, category_data)
-    else:
-        insert_category = ("insert into categories(category,user_id) values(%s,%s)")
-        category_data = (request.form["category"], session["id"])
-        cursor.execute(insert_category, category_data)
-    cnx.commit()
-    cnx.close()
+    db_session = create_session()
+    categories_dao = CategoryDAO(db_session)
+
+    id=request.form["id"]
+    if id != "":
+        categories = categories_dao.find_by_id_and_user_id(category_id, session["id"])
+        
+
+    categories_dao.save(
+        id=id,
+        name=request.form["name"],
+        user_id=session["id"]
+    )
+
+    db_session.commit()
     return redirect(url_for("list_categories"))
 
 @app.route('/dashboard')
@@ -418,14 +407,14 @@ def dashboard():
                                   database=MYSQL_DATABASE)
     cursor = cnx.cursor()
     count_c = ('''
-        select count(t.id),c.category
+        select count(t.id),c.name
         from transactions t
         join categories c
         where t.date between %s and %s
             and t.category_id=c.id
             and t.user_id =%s
         group by t.category_id
-        order by c.category asc
+        order by c.name asc
     ''')
     end_date_c = date.today()
     start_date_c = date.fromordinal(end_date_c.toordinal()-30)
@@ -435,7 +424,7 @@ def dashboard():
     for row in cursor:
         counts[row[1]] = row[0]
     count_c = ('''
-            select count(t.id),c.category
+            select count(t.id),c.name
             from transactions t
             join categories c
             where t.date between %s and %s
@@ -443,7 +432,7 @@ def dashboard():
             and t.user_id =%s
             and link_id is not null
             group by t.category_id
-            order by c.category asc
+            order by c.name asc
         ''')
     end_date_c = date.today()
     start_date_c = date.fromordinal(end_date_c.toordinal()-30)
