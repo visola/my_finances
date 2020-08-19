@@ -30,13 +30,6 @@ class CategoryDAO():
   def __init__(self, session):
     self.session = session
 
-  def save(self, *, id=None, name, user_id):
-      self.session.add(Category(
-        id=id,
-        name=name,
-        user_id=user_id
-      ))
-
   def find_by_user_id(self,user_id):
     return self.session.query(Category) \
       .filter_by(user_id=user_id) \
@@ -48,3 +41,14 @@ class CategoryDAO():
         id=id,
         user_id=user_id
       ).first()
+
+  def save(self, *, id=None, name, user_id):
+    if id == None:
+      category = Category(user_id=user_id)
+      self.session.add(category)
+    else:
+      category = self.find_by_id_and_user_id(id, user_id)
+
+    category.name = name
+
+    return category

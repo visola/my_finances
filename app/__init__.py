@@ -360,14 +360,13 @@ def list_categories():
     db_session = create_session()
     categories_dao = CategoryDAO(db_session)
 
-    categories = categories_dao.find_by_user_id(session["id"])    
-    
+    categories = categories_dao.find_by_user_id(session["id"])
     return render_template("categories/index.html", categories=categories)
 
 @app.route('/categories/new')
 @login_required
 def new_category():
-    return render_template("categories/edit.html")
+    return render_template("categories/edit.html", category={})
 
 @app.route('/categories/<category_id>')
 @login_required
@@ -375,25 +374,23 @@ def edit_category(category_id):
     db_session = create_session()
     categories_dao = CategoryDAO(db_session)
 
-    categories = categories_dao.find_by_id_and_user_id(category_id, session["id"])
-
-    return render_template("categories/edit.html", categories=categories)
+    category = categories_dao.find_by_id_and_user_id(category_id, session["id"])
+    return render_template("categories/edit.html", category=category)
 
 @app.route('/categories/save', methods=["POST"])
 @login_required
-def save_categories():
+def save_category():
     db_session = create_session()
     categories_dao = CategoryDAO(db_session)
 
-    id=request.form["id"]
-    if id != "":
-        categories = categories_dao.find_by_id_and_user_id(category_id, session["id"])
-        
+    category_id = request.form["id"]
+    if category_id == "":
+        category_id = None
 
     categories_dao.save(
-        id=id,
+        id=category_id,
         name=request.form["name"],
-        user_id=session["id"]
+        user_id=session["id"],
     )
 
     db_session.commit()
