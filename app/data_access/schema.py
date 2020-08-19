@@ -12,8 +12,17 @@ class User(Base):
   password = Column(String(150), nullable=False)
 
 class Category(Base):
-  __tablename__ = "categories"
+  __tablename__ = 'categories'
 
   id = Column(Integer, nullable=False, primary_key=True)
   name = Column(String(100), nullable=False)
   user_id = Column(Integer, nullable=False)
+
+class Account(Base):
+  __tablename__ = 'accounts'
+
+  id = Column(Integer, nullable=False, primary_key=True)
+  name = Column(String(100))
+  user_id = Column(Integer, nullable=False)
+  type = Column(String(100))
+  

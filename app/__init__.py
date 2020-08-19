@@ -16,7 +16,7 @@ import mysql.connector
 from .config import *
 
 from app.data_access.db import create_session
-from app.data_access.dao import UserDAO, CategoryDAO
+from app.data_access.dao import UserDAO, CategoryDAO, AccountDAO
 
 app = Flask(__name__)
 
@@ -464,68 +464,44 @@ def dashboard():
 @app.route('/accounts')
 @login_required
 def list_accounts():
-    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                  host=MYSQL_HOST,
-                                  database=MYSQL_DATABASE)
-    cursor = cnx.cursor()
-    select_accounts = ("select id,name,user_id,type from accounts where user_id=%s")
-    session_id_data = (session["id"],)
-    cursor.execute(select_accounts, session_id_data)
-    all_accounts = []
-    for row in cursor:
-        all_accounts.append({"id": row[0], "name": row[1], "user_id": row[2], "type": row[3]})
-    cnx.close()
-    return render_template("accounts/index.html", accounts=all_accounts)
+    db_session = create_session()
+    accounts_dao = AccountDAO(db_session)
+
+    accounts = accounts_dao.find_by_user_id(session["id"])
+    return render_template("accounts/index.html", accounts=accounts)
 
 @app.route('/accounts/new')
 @login_required
 def new_account():
-    return render_template("accounts/edit.html")
+    return render_template("accounts/edit.html", account={})
 
 @app.route('/accounts/<account_id>')
 @login_required
 def edit_accounts(account_id):
-    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                  host=MYSQL_HOST,
-                                  database=MYSQL_DATABASE)
-    cursor = cnx.cursor()
-    select_accounts = ("select id,name,user_id,type from accounts where id=%s and user_id=%s")
-    account_data = (int(account_id), session["id"])
-    cursor.execute(select_accounts, account_data)
-    row = cursor.fetchone()
-    cnx.close()
-    if row is None:
-        return "Page not found."
-    return render_template(
-        "accounts/edit.html",
-        id=row[0],
-        name=row[1],
-        user_id=row[2],
-        type=row[3]
-    )
+    db_session = create_session()
+    accounts_dao = AccountDAO(db_session)
+
+    account = accounts_dao.find_by_id_and_user_id(account_id, session["id"])
+    return render_template("accounts/edit.html", account=account)
 
 @app.route('/accounts/save', methods=["POST"])
 @login_required
 def save_accounts():
-    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                  host=MYSQL_HOST,
-                                  database=MYSQL_DATABASE)
-    cursor = cnx.cursor()
-    if request.form["id"] != "":
-        update_accounts = ("update accounts set name=%s,type=%s where id=%s and user_id = %s")
-        account_data = (
-            request.form["name"],
-            request.form["type"],
-            request.form["id"],
-            session["id"]
-        )
-        cursor.execute(update_accounts, account_data)
-    else:
-        insert_accounts = ("insert into accounts(name,user_id,type) values(%s,%s,%s)")
-        account_data = (request.form["name"], session["id"], request.form["type"])
-        cursor.execute(insert_accounts, account_data)
-    cnx.commit()
-    cnx.close()
+    db_session = create_session()
+    accounts_dao = AccountDAO(db_session)
+
+    account_id = request.form["id"]
+    if account_id == "":
+        account_id = None
+
+    accounts_dao.save(
+        id=account_id,
+        name=request.form["name"],
+        user_id=session["id"],
+        type=request.form["type"],
+    )
+
+    db_session.commit()
     return redirect(url_for("list_accounts"))
 
 @app.route('/profile')
