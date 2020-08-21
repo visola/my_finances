@@ -26,3 +26,8 @@ class Account(Base):
   user_id = Column(Integer, nullable=False)
   type = Column(String(100))
   
+class Preference(Base):
+  __tablename__ = 'preferences'
+
+  user_id = Column(Integer, nullable=False, primary_key=True)
+  preference = Column(String(60), nullable=False)

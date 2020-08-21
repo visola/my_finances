@@ -1,17 +1,20 @@
 import hashlib
 
-from app.data_access.schema import User, Category, Account
+from app.data_access.schema import User, Category, Account, Preference
 
 class UserDAO():
   def __init__(self, session):
     self.session = session
 
   def create(self, *, email, name, password):
-    self.session.add(User(
+    user=User(
       email=email,
       name=name,
       password=hashlib.sha256(password.encode("utf-8")).hexdigest(),
-    ))
+    )
+    self.session.add(user)
+    return user
+  
 
   def find_by_email(self, email):
     return self.session.query(User) \
@@ -24,6 +27,7 @@ class UserDAO():
           email=email,
           password=hashlib.sha256(password.encode("utf-8")).hexdigest(),
         ).first()
+
 
 
 class CategoryDAO():
@@ -80,3 +84,22 @@ class AccountDAO():
     account.type = type
 
     return account
+
+class PreferenceDAO():
+  def __init__(self, session):
+    self.session = session
+
+  def find_by_user_id(self, *, user_id):
+    return self.session.query(Preference) \
+      .filter_by(user_id=user_id) \
+      .first()
+
+  def save(self, *, user_id, preference):
+    loaded_preference = self.find_by_user_id(user_id=user_id)
+    if loaded_preference is None:
+      loaded_preference = Preference(user_id=user_id)
+      self.session.add(loaded_preference)
+
+    loaded_preference.preference = preference
+    return loaded_preference
+

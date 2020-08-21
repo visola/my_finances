@@ -16,7 +16,7 @@ import mysql.connector
 from .config import *
 
 from app.data_access.db import create_session
-from app.data_access.dao import UserDAO, CategoryDAO, AccountDAO
+from app.data_access.dao import UserDAO, CategoryDAO, AccountDAO, PreferenceDAO
 
 app = Flask(__name__)
 
@@ -137,7 +137,7 @@ def list_transactions():
                                   database=MYSQL_DATABASE)
     cursor = cnx.cursor()
     select_transactions = ('''
-        select t.id,t.description,c.category,t.date,t.value,a.name
+        select t.id,t.description,c.name,t.date,t.value,a.name
         from transactions t
         left join categories c on t.category_id = c.id
         join accounts a on t.source_accnt_id = a.id
@@ -151,7 +151,7 @@ def list_transactions():
         all_transactions.append({
             "id": row[0],
             "description": row[1],
-            "category": row[2],
+            "name": row[2],
             "date": row[3],
             "value": row[4],
             "source_account":row[5]
@@ -166,7 +166,7 @@ def new_transaction():
                                   host=MYSQL_HOST,
                                   database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    select_categories = ("select id,category from categories where user_id=%s")
+    select_categories = ("select id,name from categories where user_id=%s")
     category_data = (session["id"],)
     cursor.execute(select_categories, category_data)
     all_categories = cursor.fetchall()
@@ -190,7 +190,7 @@ def edit_transaction(transaction_id):
                                   host=MYSQL_HOST,
                                   database=MYSQL_DATABASE)
     cursor = cnx.cursor()
-    select_categories = ("select id,category from categories where user_id=%s")
+    select_categories = ("select id, name from categories where user_id=%s")
     category_data = (session["id"],)
     cursor.execute(select_categories, category_data)
     all_categories = cursor.fetchall()
@@ -317,15 +317,23 @@ def create_user():
 def save_users():
     db_session = create_session()
     user_dao = UserDAO(db_session)
+    preferences_dao = PreferenceDAO(db_session)
 
     maybe_user = user_dao.find_by_email(request.form["email"])
     if maybe_user is not None:
         return redirect(url_for("create_user"))
 
-    user_dao.create(
+    user = user_dao.create(
         email=request.form["email"],
         name=request.form["name"],
         password=request.form["password"],
+    )
+
+    db_session.commit()
+
+    preferences_dao.save(
+        user_id=user.id,
+        preference="en-us",
     )
 
     db_session.commit()
@@ -343,12 +351,17 @@ def logout():
 
 @app.route('/login', methods=["POST"])
 def login():
-    maybe_user = UserDAO(create_session()) \
+    db_session = create_session()
+    maybe_user = UserDAO(db_session) \
         .find_by_email_and_password(request.form["email"], request.form["password"])
 
     if maybe_user is None:
         return redirect(url_for("get_login"))
 
+    preferences_dao = PreferenceDAO(db_session)
+    preference = preferences_dao.find_by_user_id(user_id=maybe_user.id)
+
+    session['preference'] = preference.preference
     session['email'] = maybe_user.email
     session['id'] = maybe_user.id
     session['name'] = maybe_user.name
@@ -520,44 +533,29 @@ def profile_page():
         return render_template("profile/index.html", preference=session['preference'])
     return render_template("profile/index.html", preference=row[0])
 
-@app.route('/preference/new')
-@login_required
-def new_preference():
-    return render_template("profile/preferences/edit.html")
 
 @app.route('/profile/prefences')
 @login_required
 def user_prefences():
-    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                  host=MYSQL_HOST,
-                                  database=MYSQL_DATABASE)
-    cursor = cnx.cursor()
-    select_preference = ("select preference from preferences where user_id=%s")
-    preference_data = (session["id"],)
-    cursor.execute(select_preference, preference_data)
-    row = cursor.fetchone()
-    cnx.close()
-    if row is None:
-        return render_template("profile/preferences.edit.html", preference=session['preference'])
-    return render_template("profile/preferences.edit.html", preference=row[0])
+    db_session = create_session()
+    preferences_dao = PreferenceDAO(db_session)
+
+    preferences = preferences_dao.find_by_user_id(user_id=session["id"])
+    return render_template("profile/preferences.edit.html", preferences=preferences)
+    
 
 @app.route('/preferences/save', methods=["POST"])
 @login_required
 def save_preferences():
-    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                  host=MYSQL_HOST,
-                                  database=MYSQL_DATABASE)
-    cursor = cnx.cursor()
-    if request.form["exists"] == "True":
-        update_preferences = ("update preferences set preference=%s where user_id = %s")
-        preference_data = (request.form["preference"], session["id"])
-        cursor.execute(update_preferences, preference_data)
-    else:
-        insert_preferences = ("insert into preferences(user_id,preference) values(%s,%s)")
-        preference_data = (session["id"], request.form["preference"])
-        cursor.execute(insert_preferences, preference_data)
-    cnx.commit()
-    cnx.close()
+    db_session = create_session()
+    preferences_dao = PreferenceDAO(db_session)
+
+    preferences_dao.save(
+        user_id=session["id"],
+        preference=request.form["preference"],
+    )
+
+    db_session.commit()
     session['preference'] = request.form["preference"]
     return redirect(url_for("profile_page"))
 
