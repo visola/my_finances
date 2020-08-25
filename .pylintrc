@@ -6,3 +6,5 @@ ignore=config.py
 
 disable=missing-module-docstring,
         missing-function-docstring
+
+generated-members=commit

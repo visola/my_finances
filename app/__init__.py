@@ -13,10 +13,10 @@ from flask import session
 from flask import url_for
 import mysql.connector
 
+from app.data_access.dao import UserDAO, CategoryDAO, AccountDAO, PreferenceDAO
+from app.data_access.db import create_session
 from .config import *
 
-from app.data_access.db import create_session
-from app.data_access.dao import UserDAO, CategoryDAO, AccountDAO, PreferenceDAO
 
 app = Flask(__name__)
 
@@ -542,7 +542,7 @@ def user_prefences():
 
     preferences = preferences_dao.find_by_user_id(user_id=session["id"])
     return render_template("profile/preferences.edit.html", preferences=preferences)
-    
+
 
 @app.route('/preferences/save', methods=["POST"])
 @login_required
