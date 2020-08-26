@@ -2,9 +2,9 @@
 {% block content %}
 <form class="ui center aligned form" action="/accounts/save" method="POST">
     <div class="required four wide field">
-        <input type="hidden" name="id" value="{{ id }}">
+        <input type="hidden" name="id" value="{{ account.id }}">
         <label>Name:</label>
-        <input type="text" name="name" value="{{ name }}"/>
+        <input type="text" name="name" value="{{ account.name }}"/>
         </div>
         <div class="four wide field">
           <label>Type:</label>

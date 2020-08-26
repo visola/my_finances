@@ -20,8 +20,9 @@ setup(
     zip_safe=False,
     install_requires=[
       'Flask==1.1.2',
-      'gunicorn',
+      'gunicorn==20.0.4',
       'mysql-connector-python==8.0.20',
       'pylint>=2',
+      'sqlalchemy>=1.3,<1.4',
     ]
 )

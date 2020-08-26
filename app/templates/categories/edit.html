@@ -2,9 +2,9 @@
 {% block content %}
 <form class="ui center aligned form" action="/categories/save" method="POST">
     <div class="four wide field">
-        <input type="hidden" name="id" value="{{ id }}">
+        <input type="hidden" name="id" value="{{ category.id }}">
         <label>Description:</label>
-        <input type="text" name="category" value="{{ category }}"/>
+        <input type="text" name="name" value="{{ category.name }}"/>
         <br/>
     <input type="submit" class="ui teal submit button"  placeholder="Submit"/>
 </form>
