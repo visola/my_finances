@@ -401,7 +401,7 @@ def save_category():
         category_id = None
 
     categories_dao.save(
-        id=category_id,
+        category_id=category_id,
         name=request.form["name"],
         user_id=session["id"],
     )
@@ -508,10 +508,10 @@ def save_accounts():
         account_id = None
 
     accounts_dao.save(
-        id=account_id,
+        account_id=account_id,
         name=request.form["name"],
         user_id=session["id"],
-        type=request.form["type"],
+        account_type=request.form["type"],
     )
 
     db_session.commit()

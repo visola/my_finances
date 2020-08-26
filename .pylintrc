@@ -5,6 +5,8 @@
 ignore=config.py
 
 disable=missing-module-docstring,
-        missing-function-docstring
+        missing-function-docstring,
+        missing-class-docstring,
+        too-few-public-methods,
 
 generated-members=commit
