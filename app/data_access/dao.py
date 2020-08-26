@@ -51,7 +51,7 @@ class CategoryDAO():
             category = Category(user_id=user_id)
             self.session.add(category)
         else:
-            category = self.find_by_id_and_user_id(id, user_id)
+            category = self.find_by_id_and_user_id(category_id, user_id)
 
         category.name = name
 
@@ -78,7 +78,7 @@ class AccountDAO():
             account = Account(user_id=user_id)
             self.session.add(account)
         else:
-            account = self.find_by_id_and_user_id(id, user_id)
+            account = self.find_by_id_and_user_id(account_id, user_id)
 
         account.name = name
         account.type = account_type

@@ -121,7 +121,7 @@ def validate_categories(cursor, *category_ids, user_id):
         if category_id is None or int(category_id) == -1:
             continue
 
-        select_categories = ("select category from categories where user_id=%s and id=%s")
+        select_categories = ("select name from categories where user_id=%s and id=%s")
         categories_data = (user_id, category_id)
         cursor.execute(select_categories, categories_data)
         cursor.fetchone()
