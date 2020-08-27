@@ -20,7 +20,7 @@ create table users (
 
 create table categories (
   id int not null auto_increment,
-  category varchar(100) not null,
+  name varchar(100) not null,
   user_id int not null,
   primary key(id)
 );
