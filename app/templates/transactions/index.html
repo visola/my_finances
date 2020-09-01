@@ -4,7 +4,7 @@
         TRANSACTIONS
     </h1>
     <a href="/transactions/new">create new</a>
-    <table class="ui center collapsing compact teal table">
+    <table class="ui selectable celled center collapsing compact teal table">
         <thead>
             <tr>
                 <th>
@@ -24,12 +24,15 @@
                 </th>
                 <th>
                     origin account
-                </th>                
+                </th>
+                <th>
+                    linked transaction
+                </th>
             </tr>
         </thead>
         <tbody>
             {% for transaction in transactions %}
-                <tr>
+                <tr id = "transaction-{{transaction.id}}">
                     <td>
                         <a href="/transactions/{{ transaction.id }}">{{ transaction.id }}</a>
                     </td>
@@ -42,14 +45,43 @@
                     <td>
                          {{ format_date(transaction.date) }}
                     </td>
-                    <td>
-                        {{ format_currency(transaction.value) }}
-                    </td>
+                    {% if transaction.value < 0 %}
+                        <td class="negative">
+                            {{ format_currency(transaction.value) }}
+                        </td>
+                    {% elif transaction.value >= 0 %}
+                        <td class="positive">
+                            {{ format_currency(transaction.value) }}
+                        </td>
+                    {% endif %}
                     <td>
                         {{ transaction.source_account }}
                     </td>                    
+                    <td>
+                        {% if transaction.reverse_id != None %}
+                        <a href="/transactions/{{ transaction.reverse_id }}">{{ transaction.reverse_id }}</a>
+                        {% endif %}
+                    </td>
                 </tr>
             {% endfor %}
         </tbody>
     </table>
+    <script>
+        document.querySelectorAll('tbody tr').forEach((el)=>{
+            let linkedID ;
+            el.addEventListener('mouseover',(e)=>{
+                linkedID = el.children[6].innerText;            
+                if (linkedID == ""){
+                    return; 
+                }
+                document.getElementById(`transaction-${linkedID}`).style.background="rgb(240,240,240)"
+            })
+            el.addEventListener('mouseout',(e)=>{
+                if (linkedID == ""){
+                    return; 
+                }
+                document.getElementById(`transaction-${linkedID}`).style.background=null
+            })
+        })
+    </script>
 {% endblock %}

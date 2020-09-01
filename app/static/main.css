@@ -1,0 +1,6 @@
+#content{ 
+    padding-left: 15px;
+}
+.ui.selectable.table tbody tr:hover{
+    background: rgb(240, 255, 245)! important;
+}

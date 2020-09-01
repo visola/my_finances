@@ -1,6 +1,7 @@
 <html>
     <head>
-        <link rel="stylesheet" href="/static/semantic.min.css"> 
+        <link rel="stylesheet" href="/static/semantic.min.css">
+        <link rel="stylesheet" href="/static/main.css">
     </head>
 <body>
     <div class= "ui inverted menu ">
@@ -15,6 +16,6 @@
       <a class="item" href="/categories"> Categories</a>
       <a class="item" href="/accounts"> Accounts</a>
     </div>
-    {% block content %}{% endblock %}
+    <div id="content">{% block content %}{% endblock %}</div>    
 </body>
 </html>
