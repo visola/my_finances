@@ -137,10 +137,11 @@ def list_transactions():
                                   database=MYSQL_DATABASE)
     cursor = cnx.cursor()
     select_transactions = ('''
-        select t.id,t.description,c.name,t.date,t.value,a.name
-        from transactions t
+        select t.id,t.description,c.name,t.date,t.value,a.name,t1.id
+        from transactions t        
         left join categories c on t.category_id = c.id
         join accounts a on t.source_accnt_id = a.id
+        left join transactions t1 on t.link_id = t1.link_id and t.id<>t1.id
         where t.user_id=%s
         order by date desc
     ''')
@@ -154,7 +155,8 @@ def list_transactions():
             "name": row[2],
             "date": row[3],
             "value": row[4],
-            "source_account":row[5]
+            "source_account": row[5],
+            "reverse_id" : row[6],
         })
     cnx.close()
     return render_template("transactions/index.html", transactions=all_transactions)
@@ -240,6 +242,12 @@ def post_transactions():
     valid, value = parse_currency(request.form["value"])
     if not valid:
         return "Value can not be empty."
+
+    if value < 0:
+        value = value*-1
+
+    if request.form["direction"] == "1":
+        value = value*-1
 
     valid, transaction_date = parse_date(request.form["date"])
     if not valid:

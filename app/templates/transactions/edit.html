@@ -23,6 +23,20 @@
             <label>Value:</label>
             <input type="text" name="value" value="{{ format_number(value) }}"/>
             </div>
+            <div class="inline fields">
+              <div class="field">
+                <div class="ui radio">
+                    <input type="radio" name="direction" checked="checked" id="direction-1" value="1" />
+                    <label class="ui red header" for="direction-1">Coming Out</label>
+                </div>
+              </div>
+              <div class="field">
+                <div class="ui radio">
+                  <input type="radio" name="direction" id="direction-2" value="2" />
+                  <label class="ui green header" for="direction-2">Coming into</label>
+                </div>
+              </div>
+            </div>
             <div class="four wide field">
               <label>Choose your origin account:</label>
               <select class="ui fluid dropdown" name="source_accnt_id">                        
