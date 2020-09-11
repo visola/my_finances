@@ -40,7 +40,11 @@
                         {{ transaction.description }}
                     </td>
                     <td>
-                        {{ transaction.name }}
+                        {% for category in categories %}
+                        {% if transaction.category_id == category.id%}
+                        {{ category.name }}
+                        {% endif %} 
+                        {% endfor %}
                     </td>
                     <td>
                          {{ format_date(transaction.date) }}
@@ -53,13 +57,21 @@
                         <td class="positive">
                             {{ format_currency(transaction.value) }}
                         </td>
-                    {% endif %}
+                    {% endif %}                    
                     <td>
-                        {{ transaction.source_account }}
+                        {% for account in accounts %}
+                        {% if transaction.source_accnt_id == account.id %}
+                        {{ account.name }}
+                        {% endif %} 
+                        {% endfor %}
                     </td>                    
                     <td>
-                        {% if transaction.reverse_id != None %}
-                        <a href="/transactions/{{ transaction.reverse_id }}">{{ transaction.reverse_id }}</a>
+                        {% if transaction.link_id is not none %}
+                        {% for reverse_transaction in transactions %}
+                        {% if reverse_transaction.link_id == transaction.link_id and reverse_transaction.id != transaction.id %}
+                        <a href="/transactions/{{ reverse_transaction.id }}">{{ reverse_transaction.id }}</a>
+                        {% endif %}
+                        {% endfor %}
                         {% endif %}
                     </td>
                 </tr>

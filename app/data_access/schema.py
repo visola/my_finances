@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Date, Integer, Numeric, String
 from sqlalchemy.ext.declarative import declarative_base
 
 Base = declarative_base()
@@ -31,3 +31,15 @@ class Preference(Base):
 
     user_id = Column(Integer, nullable=False, primary_key=True)
     preference = Column(String(60), nullable=False)
+
+class Transaction(Base):
+    __tablename__ = 'transactions'
+
+    id = Column(Integer, nullable=False, primary_key=True)
+    description = Column(String(150))
+    user_id = Column(Integer, nullable=False)
+    category_id = Column(Integer)
+    date = Column(Date, nullable=False)
+    value = Column(Numeric, nullable=False)
+    source_accnt_id = Column(Integer, nullable=False)
+    link_id = Column(String(150))

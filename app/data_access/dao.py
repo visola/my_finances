@@ -1,6 +1,6 @@
 import hashlib
-
-from app.data_access.schema import User, Category, Account, Preference
+from sqlalchemy import desc
+from app.data_access.schema import User, Category, Account, Preference, Transaction
 
 class UserDAO():
     def __init__(self, session):
@@ -102,3 +102,56 @@ class PreferenceDAO():
 
         loaded_preference.preference = preference
         return loaded_preference
+
+class TransactionDAO():
+    def __init__(self, session):
+        self.session = session
+
+    def find_by_user_id(self, *, user_id):
+        return self.session.query(Transaction) \
+          .filter_by(user_id=user_id) \
+          .order_by(desc(Transaction.date)) \
+          .all()
+
+    def find_by_id_and_user_id(self, *, transaction_id, user_id):
+        return self.session.query(Transaction) \
+            .filter_by(
+                id=transaction_id,
+                user_id=user_id
+            ).first()
+
+    def find_linked_transaction(self, *, link_id, user_id, transaction_id):
+        return self.session.query(Transaction) \
+            .filter_by(
+                link_id=link_id,
+                user_id=user_id,
+            ).filter(
+                Transaction.id != transaction_id
+            ).first()
+
+    def delete_by_id(self, *, transaction_id, user_id):
+        return self.session.query(Transaction) \
+            .filter_by(
+                id=transaction_id,
+                user_id=user_id
+            ).delete()
+
+    def save(self, *, transaction_id=None, description, user_id,
+             category_id, date, value, source_accnt_id, link_id):
+        if transaction_id is None:
+            transaction = Transaction(user_id=user_id)
+            self.session.add(transaction)
+        else:
+            transaction = self.find_by_id_and_user_id(
+                transaction_id=transaction_id,
+                user_id=user_id
+            )
+
+        transaction.description = description
+        transaction.category_id = category_id
+        transaction.date = date
+        transaction.value = value
+        transaction.source_accnt_id = source_accnt_id
+        transaction.link_id = link_id
+
+        return transaction

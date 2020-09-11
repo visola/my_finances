@@ -11,17 +11,13 @@
         <select class="ui fluid dropdown" name="category_id">
           <option value="-1">None</option>
           {% for category in categories %}
-            <option value="{{category[0]}}" {{ 'selected' if category[0] == category_id  else '' }}> {{category[1]}} </option>
+            <option value="{{category.id}}" {{ 'selected' if category.id == category_id  else '' }}> {{category.name}} </option>
           {% endfor %}
         </select>
       </div> 
           <div class="required four wide field">                    
             <label>Date:</label>
             <input type="text" name="date" value="{{ format_date(date) }}"/>
-            </div>
-          <div class="required four wide field">                    
-            <label>Value:</label>
-            <input type="text" name="value" value="{{ format_number(value) }}"/>
             </div>
             <div class="inline fields">
               <div class="field">
@@ -37,11 +33,15 @@
                 </div>
               </div>
             </div>
+          <div class="required four wide field">                    
+            <label>Value:</label>
+            <input type="text" name="value" value="{{ format_number(value) }}"/>
+            </div>
             <div class="four wide field">
               <label>Choose your origin account:</label>
               <select class="ui fluid dropdown" name="source_accnt_id">                        
                 {% for account in accounts %}
-                  <option value="{{account[0]}}" {{ 'selected' if account[0] == source_accnt_id  else '' }}> {{account[1]}} </option>
+                  <option value="{{account.id}}" {{ 'selected' if account.id == source_accnt_id  else '' }}> {{account.name}} </option>
                 {% endfor %}
               </select>
             </div>            
@@ -61,7 +61,7 @@ let destinationAccntID = {{destination_accnt_id}};
 
 let accounts = [];
 {% for account in accounts %}
-accounts.push({id:{{account[0]}},name:'{{account[1]}}'});
+accounts.push({id:{{account.id}},name:'{{account.name}}'});
 {% endfor %}
 
 let destinationAccountCombo = document.querySelector('[name=destination_accnt_id]');
