@@ -9,4 +9,4 @@ disable=missing-module-docstring,
         missing-class-docstring,
         too-few-public-methods,
 
-generated-members=commit
+generated-members=commit,close

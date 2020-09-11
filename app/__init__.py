@@ -13,7 +13,7 @@ from flask import session
 from flask import url_for
 import mysql.connector
 
-from app.data_access.dao import UserDAO, CategoryDAO, AccountDAO, PreferenceDAO
+from app.data_access.dao import UserDAO, CategoryDAO, AccountDAO, PreferenceDAO, TransactionDAO
 from app.data_access.db import create_session
 from .config import *
 
@@ -30,26 +30,6 @@ def login_required(function_to_wrap):
         return redirect(url_for("get_login"))
     return decorated_function
 
-def find_linked_transaction(cursor, transaction_id, user_id):
-    select_transaction = ('''
-        SELECT t.id, t.link_id, r.id
-        FROM transactions t
-        LEFT OUTER JOIN transactions r
-            ON r.link_id = t.link_id
-            and t.link_id IS NOT NULL
-            AND t.user_id = r.user_id
-            and t.id<>r.id
-        WHERE t.id = %s AND t.user_id = %s
-    ''')
-    transaction_data = (transaction_id, user_id)
-    cursor.execute(select_transaction, transaction_data)
-    row = cursor.fetchone()
-
-    if cursor.rowcount == 0:
-        return False, None, None
-
-    return True, row[1], row[2]
-
 def parse_currency(value):
     if value == "":
         return False, None
@@ -65,179 +45,108 @@ def parse_date(date_string):
 
     return True, datetime.strptime(date_string, '%m/%d/%Y')
 
-def save_transaction(cursor, *, account_id, category_id, description, link_id,
-                     transaction_date, transaction_id, user_id, value):
-    if transaction_id == "" or transaction_id is None:
-        insert_transaction = ('''
-            insert into transactions
-            (description, user_id, category_id, date, value, source_accnt_id, link_id)
-            values (%s, %s, %s, %s, %s, %s, %s)
-        ''')
-        transaction_data = (
-            description,
-            user_id,
-            category_id,
-            transaction_date,
-            value,
-            account_id,
-            link_id
-        )
-        cursor.execute(insert_transaction, transaction_data)
-    else:
-        update_transaction = ('''
-            update transactions
-            set description=%s, category_id=%s, date=%s, value=%s, source_accnt_id=%s, link_id=%s
-            where id=%s
-                and user_id = %s
-        ''')
-        transaction_data = (
-            description,
-            category_id,
-            transaction_date,
-            value,
-            account_id,
-            link_id,
-            transaction_id,
-            user_id
-        )
-        cursor.execute(update_transaction, transaction_data)
-
-def validate_accounts(cursor, *account_ids, user_id):
+def validate_accounts(db_session, *account_ids, user_id):
+    account_dao = AccountDAO(db_session)
     for account_id in account_ids:
         if account_id is None or int(account_id) == -1:
             continue
 
         print(f"Validating account '{account_id}'")
-        validate_source_accnt = ("select id from accounts where id = %s and user_id = %s")
-        source_accnt_data = (account_id, user_id)
-        cursor.execute(validate_source_accnt, source_accnt_data)
-        cursor.fetchone()
-        if cursor.rowcount == 0:
+        account = account_dao.find_by_id_and_user_id(
+            account_id=account_id,
+            user_id=user_id
+        )
+        if account is None:
             return False
     return True
 
-def validate_categories(cursor, *category_ids, user_id):
+def validate_categories(db_session, *category_ids, user_id):
+    category_dao = CategoryDAO(db_session)
     for category_id in category_ids:
         if category_id is None or int(category_id) == -1:
             continue
 
-        select_categories = ("select name from categories where user_id=%s and id=%s")
-        categories_data = (user_id, category_id)
-        cursor.execute(select_categories, categories_data)
-        cursor.fetchone()
-        if cursor.rowcount == 0:
+        category = category_dao.find_by_id_and_user_id(
+            category_id=category_id,
+            user_id=user_id
+        )
+        if category is None:
             return False
     return True
 
 @app.route('/transactions')
 @login_required
 def list_transactions():
-    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                  host=MYSQL_HOST,
-                                  database=MYSQL_DATABASE)
-    cursor = cnx.cursor()
-    select_transactions = ('''
-        select t.id,t.description,c.name,t.date,t.value,a.name,t1.id
-        from transactions t        
-        left join categories c on t.category_id = c.id
-        join accounts a on t.source_accnt_id = a.id
-        left join transactions t1 on t.link_id = t1.link_id and t.id<>t1.id
-        where t.user_id=%s
-        order by date desc
-    ''')
-    session_id_data = (session["id"],)
-    cursor.execute(select_transactions, session_id_data)
-    all_transactions = []
-    for row in cursor:
-        all_transactions.append({
-            "id": row[0],
-            "description": row[1],
-            "name": row[2],
-            "date": row[3],
-            "value": row[4],
-            "source_account": row[5],
-            "reverse_id" : row[6],
-        })
-    cnx.close()
-    return render_template("transactions/index.html", transactions=all_transactions)
+    db_session = create_session()
+    transaction_dao = TransactionDAO(db_session)
+    all_transactions = transaction_dao.find_by_user_id(user_id=session["id"])
+    category_dao = CategoryDAO(db_session)
+    categories = category_dao.find_by_user_id(session["id"])
+    account_dao = AccountDAO(db_session)
+    accounts = account_dao.find_by_user_id(session["id"])
+    return render_template("transactions/index.html",
+                           transactions=all_transactions,
+                           categories=categories,
+                           accounts=accounts)
 
 @app.route('/transactions/new')
 @login_required
 def new_transaction():
-    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                  host=MYSQL_HOST,
-                                  database=MYSQL_DATABASE)
-    cursor = cnx.cursor()
-    select_categories = ("select id,name from categories where user_id=%s")
-    category_data = (session["id"],)
-    cursor.execute(select_categories, category_data)
-    all_categories = cursor.fetchall()
-    select_accounts = ("select id,name from accounts where user_id=%s")
-    account_data = (session["id"],)
-    cursor.execute(select_accounts, account_data)
-    all_accounts = cursor.fetchall()
-    cnx.close()
+    db_session = create_session()
+    category_dao = CategoryDAO(db_session)
+    categories = category_dao.find_by_user_id(session["id"])
+    account_dao = AccountDAO(db_session)
+    accounts = account_dao.find_by_user_id(session["id"])
+    db_session.close()
     return render_template(
         "transactions/edit.html",
-        categories=all_categories,
+        categories=categories,
         date=datetime.now(),
         destination_accnt_id=None,
-        accounts=all_accounts
+        accounts=accounts
     )
 
 @app.route('/transactions/<transaction_id>')
 @login_required
 def edit_transaction(transaction_id):
-    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                  host=MYSQL_HOST,
-                                  database=MYSQL_DATABASE)
-    cursor = cnx.cursor()
-    select_categories = ("select id, name from categories where user_id=%s")
-    category_data = (session["id"],)
-    cursor.execute(select_categories, category_data)
-    all_categories = cursor.fetchall()
-    select_accounts = ("select id,name from accounts where user_id=%s")
-    account_data = (session["id"],)
-    cursor.execute(select_accounts, account_data)
-    all_accounts = cursor.fetchall()
-    select_transaction = ('''
-        select id,description,category_id,date,value,source_accnt_id,link_id
-        from transactions
-        where id=%s and user_id=%s
-    ''')
-    transaction_data = (int(transaction_id), session["id"])
-    cursor.execute(select_transaction, transaction_data)
-    row = cursor.fetchone()
-    linked_transaction_accnt = None
-    if row[6] is not None:
-        linked_account = ("select source_accnt_id from transactions where link_id =%s and id<> %s")
-        link_id_data = (row[6], int(transaction_id))
-        cursor.execute(linked_account, link_id_data)
-        linked_transaction_accnt = cursor.fetchone()[0]
-    cnx.close()
-    if row is None:
-        return "Page not found."
+    db_session = create_session()
+    category_dao = CategoryDAO(db_session)
+    categories = category_dao.find_by_user_id(session["id"])
+    account_dao = AccountDAO(db_session)
+    accounts = account_dao.find_by_user_id(session["id"])
+    transaction_dao = TransactionDAO(db_session)
+    transaction = transaction_dao.find_by_id_and_user_id(
+        transaction_id=transaction_id,
+        user_id=session["id"]
+    )
+    destination_accnt_id = None
+    linked_transaction_id = None
+    if transaction.link_id is not None:
+        linked_transaction = transaction_dao.find_linked_transaction(
+            link_id=transaction.link_id,
+            user_id=session["id"],
+            transaction_id=transaction.id
+        )
+        destination_accnt_id = linked_transaction.source_accnt_id
+        linked_transaction_id = linked_transaction.id
+    db_session.close()
     return render_template(
         "transactions/edit.html",
-        accounts=all_accounts,
-        categories=all_categories,
-        category_id=row[2],
-        date=row[3],
-        description=row[1],
-        destination_accnt_id=linked_transaction_accnt,
-        id=row[0],
-        source_accnt_id=row[5],
-        value=row[4],
-        link_id=row[6]
+        categories=categories,
+        accounts=accounts,
+        category_id=transaction.category_id,
+        date=transaction.date,
+        description=transaction.description,
+        destination_accnt_id=destination_accnt_id,
+        id=transaction.id,
+        source_accnt_id=transaction.source_accnt_id,
+        value=transaction.value,
+        link_id=linked_transaction_id
     )
 
 @app.route('/transactions/save', methods=["POST"])
 @login_required
 def post_transactions():
-    cnx = mysql.connector.connect(user=MYSQL_USER, password=MYSQL_PASSWORD,
-                                  host=MYSQL_HOST,
-                                  database=MYSQL_DATABASE)
-    cursor = cnx.cursor()
 
     valid, value = parse_currency(request.form["value"])
     if not valid:
@@ -253,68 +162,79 @@ def post_transactions():
     if not valid:
         return f"'{request.form['date']}' Is not according to format."
 
-    if not validate_accounts(
-            cursor,
+    db_session = create_session()
+
+    if validate_accounts(
+            db_session,
             request.form["source_accnt_id"],
             request.form["destination_accnt_id"],
-            user_id=session["id"]
-        ):
-        cnx.close()
+            user_id=session["id"]) is False:
+        db_session.close()
         return "Sorry, there was an error. Invalid account ID."
 
-    category_id = request.form['category_id']
-    if not validate_categories(cursor, category_id, user_id=session["id"]):
-        cnx.close()
+    if validate_categories(
+            db_session,
+            request.form["category_id"],
+            user_id=session["id"]) is False:
+        db_session.close()
         return "Sorry, there was an error. Invalid category ID."
 
-    reverse_transaction_id = None
+    transaction_dao = TransactionDAO(db_session)
+
+    reverse_transaction = None
     link_id = None
-    if request.form["id"] != "":
-        valid, link_id, reverse_transaction_id = find_linked_transaction(
-            cursor,
-            request.form["id"],
-            session["id"]
+    transaction_id = request.form["id"] or None
+    if transaction_id is not None:
+        transaction = transaction_dao.find_by_id_and_user_id(
+            transaction_id=request.form["id"],
+            user_id=session["id"]
+        )
+        if transaction is None:
+            db_session.close()
+            return "Sorry, there was an error. Invalid transaction ID."
+        if transaction.link_id is not None:
+            link_id = transaction.link_id
+            reverse_transaction = transaction_dao.find_linked_transaction(
+                link_id=link_id,
+                user_id=session["id"],
+                transaction_id=transaction.id
+            )
+
+    if request.form["destination_accnt_id"] != "-1":
+        link_id = str(uuid.uuid4())
+        reverse_transaction_id = None
+        if reverse_transaction is not None:
+            reverse_transaction_id = reverse_transaction.id
+        transaction_dao.save(
+            transaction_id=reverse_transaction_id,
+            description=request.form["description"],
+            user_id=session["id"],
+            category_id=request.form["category_id"],
+            date=transaction_date,
+            value=value*-1,
+            source_accnt_id=request.form["destination_accnt_id"],
+            link_id=link_id
         )
 
-        if not valid:
-            cnx.close()
-            return "Sorry, there was an error. Invalid transaction ID."
-
-    if request.form["destination_accnt_id"] != "-1" and link_id is None:
-        link_id = str(uuid.uuid4())
-
-    save_transaction(
-        cursor,
-        account_id=request.form["source_accnt_id"],
-        category_id=category_id,
+    transaction_dao.save(
+        transaction_id=transaction_id,
         description=request.form["description"],
-        link_id=link_id,
-        transaction_date=transaction_date,
-        transaction_id=request.form["id"],
         user_id=session["id"],
+        category_id=request.form["category_id"],
+        date=transaction_date,
         value=value,
+        source_accnt_id=request.form["source_accnt_id"],
+        link_id=link_id
     )
 
-    if link_id is None:
-        if reverse_transaction_id is not None:
-            delete_linked_transactions = ("delete from transactions where id= %s")
-            delete_data = (reverse_transaction_id, )
-            cursor.execute(delete_linked_transactions, delete_data)
-    else:
-        save_transaction(
-            cursor,
-            account_id=request.form["destination_accnt_id"],
-            category_id=category_id,
-            description=request.form["description"],
-            link_id=link_id,
-            transaction_date=transaction_date,
-            transaction_id=reverse_transaction_id,
-            user_id=session["id"],
-            value=value * -1,
+    if reverse_transaction is not None and request.form["destination_accnt_id"] == "-1":
+        transaction_dao.delete_by_id(
+            transaction_id=reverse_transaction.id,
+            user_id=session["id"]
         )
 
-    cnx.commit()
-    cnx.close()
+    db_session.commit()
+    db_session.close()
     return redirect(url_for("list_transactions"))
 
 @app.route('/users/new')
