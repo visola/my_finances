@@ -21,6 +21,9 @@ jobs:
       - name: Lint
         run: pylint app/
 
+      - name: Unit Tests
+        run: pytest --cov=app tests/
+
       - name: Release
         if: github.ref == 'refs/heads/master'
         env:
