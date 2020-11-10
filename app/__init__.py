@@ -84,6 +84,7 @@ def list_transactions():
     categories = category_dao.find_by_user_id(session["id"])
     account_dao = AccountDAO(db_session)
     accounts = account_dao.find_by_user_id(session["id"])
+    db_session.close()
     return render_template("transactions/index.html",
                            transactions=all_transactions,
                            categories=categories,
@@ -265,6 +266,7 @@ def save_users():
     )
 
     db_session.commit()
+    db_session.close()
     return redirect(url_for("list_transactions"))
 
 @app.route('/login', methods=["GET"])
@@ -284,6 +286,7 @@ def login():
         .find_by_email_and_password(request.form["email"], request.form["password"])
 
     if maybe_user is None:
+        db_session.close()
         return redirect(url_for("get_login"))
 
     preferences_dao = PreferenceDAO(db_session)
@@ -293,6 +296,7 @@ def login():
     session['email'] = maybe_user.email
     session['id'] = maybe_user.id
     session['name'] = maybe_user.name
+    db_session.close()
     return redirect(url_for("dashboard"))
 
 @app.route('/categories')
@@ -302,6 +306,7 @@ def list_categories():
     categories_dao = CategoryDAO(db_session)
 
     categories = categories_dao.find_by_user_id(session["id"])
+    db_session.close()
     return render_template("categories/index.html", categories=categories)
 
 @app.route('/categories/new')
@@ -316,6 +321,7 @@ def edit_category(category_id):
     categories_dao = CategoryDAO(db_session)
 
     category = categories_dao.find_by_id_and_user_id(category_id, session["id"])
+    db_session.close()
     return render_template("categories/edit.html", category=category)
 
 @app.route('/categories/save', methods=["POST"])
@@ -335,6 +341,7 @@ def save_category():
     )
 
     db_session.commit()
+    db_session.close()
     return redirect(url_for("list_categories"))
 
 @app.route('/dashboard')
@@ -409,6 +416,7 @@ def list_accounts():
     accounts_dao = AccountDAO(db_session)
 
     accounts = accounts_dao.find_by_user_id(session["id"])
+    db_session.close()
     return render_template("accounts/index.html", accounts=accounts)
 
 @app.route('/accounts/new')
@@ -423,6 +431,7 @@ def edit_accounts(account_id):
     accounts_dao = AccountDAO(db_session)
 
     account = accounts_dao.find_by_id_and_user_id(account_id, session["id"])
+    db_session.close()
     return render_template("accounts/edit.html", account=account)
 
 @app.route('/accounts/save', methods=["POST"])
@@ -443,6 +452,7 @@ def save_accounts():
     )
 
     db_session.commit()
+    db_session.close()
     return redirect(url_for("list_accounts"))
 
 @app.route('/profile')
@@ -469,6 +479,7 @@ def user_prefences():
     preferences_dao = PreferenceDAO(db_session)
 
     preferences = preferences_dao.find_by_user_id(user_id=session["id"])
+    db_session.close()
     return render_template("profile/preferences.edit.html", preferences=preferences)
 
 
@@ -484,6 +495,7 @@ def save_preferences():
     )
 
     db_session.commit()
+    db_session.close()
     session['preference'] = request.form["preference"]
     return redirect(url_for("profile_page"))
 
