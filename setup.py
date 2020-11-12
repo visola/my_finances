@@ -23,6 +23,8 @@ setup(
       'gunicorn==20.0.4',
       'mysql-connector-python==8.0.20',
       'pylint>=2',
+      'pytest==6.0.2',
+      'pytest-cov==2.10.1',
       'sqlalchemy>=1.3,<1.4',
     ]
 )

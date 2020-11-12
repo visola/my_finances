@@ -15,6 +15,7 @@ import mysql.connector
 
 from app.data_access.dao import UserDAO, CategoryDAO, AccountDAO, PreferenceDAO, TransactionDAO
 from app.data_access.db import create_session
+from app import locale_format
 from .config import *
 
 
@@ -217,6 +218,13 @@ def post_transactions():
             link_id=link_id
         )
 
+    if reverse_transaction is not None and request.form["destination_accnt_id"] == "-1":
+        transaction_dao.delete_by_id(
+            transaction_id=reverse_transaction.id,
+            user_id=session["id"]
+        )
+        link_id = None
+
     transaction_dao.save(
         transaction_id=transaction_id,
         description=request.form["description"],
@@ -228,11 +236,6 @@ def post_transactions():
         link_id=link_id
     )
 
-    if reverse_transaction is not None and request.form["destination_accnt_id"] == "-1":
-        transaction_dao.delete_by_id(
-            transaction_id=reverse_transaction.id,
-            user_id=session["id"]
-        )
 
     db_session.commit()
     db_session.close()
@@ -502,28 +505,17 @@ def save_preferences():
 
 @app.context_processor
 def formatters():
-    def format_currency(value):
-        preference = session['preference']
-        if preference == "pt-br":
-            return "R$ " + str(value).replace(".", ",")
-        return "$ {0:.2f}".format(value)
+    def wrap_format_currency(value):
+        return locale_format.format_currency(value, session["preference"])
 
-    def format_number(value):
-        if not isinstance(value, decimal.Decimal):
-            value = 0.0
-        preference = session['preference']
-        if preference == "pt-br":
-            return  str(value).replace(".", ",")
-        return "{0:.2f}".format(value)
+    def wrap_format_number(value):
+        return locale_format.format_number(value, session["preference"])
 
-    def format_date(to_format):
-        preference = session['preference']
-        if preference == "pt-br":
-            return datetime.strftime(to_format, '%d/%m/%Y')
-        return datetime.strftime(to_format, '%m/%d/%Y')
+    def wrap_format_date(to_format):
+        return locale_format.format_date(to_format, session["preference"])
 
     return dict(
-        format_currency=format_currency,
-        format_number=format_number,
-        format_date=format_date
+        format_currency=wrap_format_currency,
+        format_number=wrap_format_number,
+        format_date=wrap_format_date
     )

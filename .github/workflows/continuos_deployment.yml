@@ -16,10 +16,13 @@ jobs:
           python-version: 3.8
 
       - name: Install dependencies
-        run: python3 setup.py install
+        run: python3 setup.py develop
 
       - name: Lint
         run: pylint app/
+
+      - name: Unit Tests
+        run: pytest --cov=app tests/
 
       - name: Release
         if: github.ref == 'refs/heads/master'
