@@ -18,8 +18,7 @@ from app.data_access.dao import UserDAO, CategoryDAO, AccountDAO, PreferenceDAO,
 from app.data_access.db import create_session
 from app import locale_format
 
-from .config import *
-from .environment_config import *
+from .config_loader import *
 
 app = Flask(__name__)
 
