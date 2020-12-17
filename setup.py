@@ -1,14 +1,15 @@
 from os import path
 from setuptools import setup
 
-if not path.exists('app/config.py'):
-    with open('app/config.py', 'w') as f:
+if not path.exists('config.ini'):
+    with open('config.ini', 'w') as f:
       f.write('''
+[DEFAULT]
+APP_SECRET_KEY='{CRYPTO_KEY_FOR_SESSION}'
 MYSQL_DATABASE='{DATABASE_NAME}'
 MYSQL_HOST='{DATABASE_HOST}'
 MYSQL_PASSWORD='{DATABASE_PASSWORD}'
 MYSQL_USER='{DATABASE_USERNAME}'
-MSQL_SECRET_KEY='{CRYPTO_KEY_FOR_SESSION}'
       ''')
 
 setup(
