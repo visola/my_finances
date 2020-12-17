@@ -22,7 +22,7 @@ from .config_loader import *
 
 app = Flask(__name__)
 
-app.secret_key = MSQL_SECRET_KEY
+app.secret_key = APP_SECRET_KEY
 
 def login_required(function_to_wrap):
     @wraps(function_to_wrap)

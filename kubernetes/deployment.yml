@@ -34,7 +34,7 @@ spec:
               secretKeyRef:
                 name: myfinances
                 key: mysql.password
-          - name: MSQL_SECRET_KEY
+          - name: APP_SECRET_KEY
             valueFrom:
               secretKeyRef:
                 name: myfinances
