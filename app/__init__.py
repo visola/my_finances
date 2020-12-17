@@ -4,6 +4,7 @@ import decimal
 from functools import wraps
 import re
 import uuid
+from os import path
 
 from flask import Flask
 from flask import redirect
@@ -16,8 +17,9 @@ import mysql.connector
 from app.data_access.dao import UserDAO, CategoryDAO, AccountDAO, PreferenceDAO, TransactionDAO
 from app.data_access.db import create_session
 from app import locale_format
-from .config import *
 
+from .config import *
+from .environment_config import *
 
 app = Flask(__name__)
 
