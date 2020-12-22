@@ -12,14 +12,17 @@
 
 ### configuração
 
-Crie um arquivo `app/config.py` com as seguintes informações dentro:
+Crie um arquivo `config.ini` na raíz deste diretório com as seguintes informações dentro:
 
-```python
-MYSQL_DATABASE='{DATABASE_NAME}'
-MYSQL_HOST='{DATABASE_HOST}'
-MYSQL_PASSWORD='{DATABASE_PASSWORD}'
-MYSQL_USER='{DATABASE_USERNAME}'
-MSQL_SECRET_KEY='{CRYPTO_KEY_FOR_SESSION}'
+```ini
+[DEFAULT]
+
+APP_SECRET_KEY={CRYPTO_KEY_FOR_SESSION}
+
+MYSQL_DATABASE={DATABASE_NAME}
+MYSQL_HOST={DATABASE_HOST}
+MYSQL_PASSWORD={DATABASE_PASSWORD}
+MYSQL_USER={DATABASE_USERNAME}
 ```
 
 ### instalação

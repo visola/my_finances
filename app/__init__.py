@@ -4,6 +4,7 @@ import decimal
 from functools import wraps
 import re
 import uuid
+from os import path
 
 from flask import Flask
 from flask import redirect
@@ -16,12 +17,12 @@ import mysql.connector
 from app.data_access.dao import UserDAO, CategoryDAO, AccountDAO, PreferenceDAO, TransactionDAO
 from app.data_access.db import create_session
 from app import locale_format
-from .config import *
 
+from .config_loader import *
 
 app = Flask(__name__)
 
-app.secret_key = MSQL_SECRET_KEY
+app.secret_key = APP_SECRET_KEY
 
 def login_required(function_to_wrap):
     @wraps(function_to_wrap)

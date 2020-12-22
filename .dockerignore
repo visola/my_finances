@@ -1,12 +1,10 @@
 __pycache__
 .coverage
-.DS_Store
 .vscode
 *.egg-info
 *.pyc
-/env
+*/config.py 
 build/
-config.ini
 dist/
-instance/
+env
 venv
