@@ -9,4 +9,4 @@ COPY ./setup.py /opt/setup.py
 WORKDIR /opt
 RUN python3 setup.py install
 
-CMD [ "python3", "-m", "flask", "run", "--host=0.0.0.0" ]
+CMD [ "gunicorn", "-b", "127.0.0.1:5000", "app:app" ]
