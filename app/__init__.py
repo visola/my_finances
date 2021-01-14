@@ -16,10 +16,13 @@ import mysql.connector
 from prometheus_flask_exporter import PrometheusMetrics
 
 from app.data_access.dao import UserDAO, CategoryDAO, AccountDAO, PreferenceDAO, TransactionDAO
-from app.data_access.db import create_session
+from app.data_access.db import connection as db_url, create_session
 from app import locale_format
+from app import migrations
 
 from .config_loader import *
+
+migrations.run_migrations(f"{os.getcwd()}/alembic/", db_url)
 
 app = Flask(__name__)
 app.secret_key = APP_SECRET_KEY
