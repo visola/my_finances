@@ -6,9 +6,6 @@
 
 ### banco de dados
 - criar um banco de dados no MySQL
-- acessar o banco `use <banco>`
-- utilizar o arquivo [script_my_finances.sql](script_my_finances.sql) e aplicar seus comandos
-- para ativar as paginas do browser, use as intruções de ## local development na linha de comnando
 
 ### configuração
 
