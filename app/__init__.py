@@ -13,6 +13,7 @@ from flask import request
 from flask import session
 from flask import url_for
 import mysql.connector
+from prometheus_flask_exporter import PrometheusMetrics
 
 from app.data_access.dao import UserDAO, CategoryDAO, AccountDAO, PreferenceDAO, TransactionDAO
 from app.data_access.db import create_session
@@ -21,8 +22,9 @@ from app import locale_format
 from .config_loader import *
 
 app = Flask(__name__)
-
 app.secret_key = APP_SECRET_KEY
+
+metrics = PrometheusMetrics(app, defaults_prefix="myfinances")
 
 def login_required(function_to_wrap):
     @wraps(function_to_wrap)

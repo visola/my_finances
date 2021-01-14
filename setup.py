@@ -23,6 +23,7 @@ setup(
       'Flask==1.1.2',
       'gunicorn==20.0.4',
       'mysql-connector-python==8.0.20',
+      'prometheus-flask-exporter==0.18.1',
       'pylint>=2',
       'pytest==6.0.2',
       'pytest-cov==2.10.1',
