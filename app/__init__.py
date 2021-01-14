@@ -24,7 +24,7 @@ from .config_loader import *
 app = Flask(__name__)
 app.secret_key = APP_SECRET_KEY
 
-metrics = PrometheusMetrics(app, defaults_prefix="myfinances")
+metrics = PrometheusMetrics(app, default_labels={"app": "myfinances"})
 
 def login_required(function_to_wrap):
     @wraps(function_to_wrap)
@@ -77,6 +77,10 @@ def validate_categories(db_session, *category_ids, user_id):
         if category is None:
             return False
     return True
+
+@app.route('/')
+def root():
+    return redirect(url_for("dashboard"))
 
 @app.route('/transactions')
 @login_required
