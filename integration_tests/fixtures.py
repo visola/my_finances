@@ -3,7 +3,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 
 from .entities import User
-from .pages import AccountsPage, CreateUserPage, DashboardPage, LoginPage
+from .pages import AccountsPage, CreateAccountPage, CreateUserPage, DashboardPage, LoginPage
 
 @pytest.fixture
 def browser():
@@ -18,6 +18,10 @@ def browser():
 @pytest.fixture
 def accounts_page(browser):
     return AccountsPage(browser)
+
+@pytest.fixture
+def create_account_page(browser):
+    return CreateAccountPage(browser)
 
 @pytest.fixture
 def create_user_page(browser):
