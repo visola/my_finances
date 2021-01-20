@@ -1,0 +1,20 @@
+services:
+  mysql:
+    env_file: test-environment.properties
+    image: mysql:8
+
+  my_finances:
+    env_file: test-environment.properties
+    depends_on:
+      - mysql
+    build: ../
+    ports:
+      - "5000"
+
+  integration_tests:
+    env_file: test-environment.properties
+    depends_on:
+      - my_finances
+    build:
+      context: ../
+      dockerfile: ./integration_tests/Dockerfile

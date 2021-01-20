@@ -11,4 +11,4 @@ COPY ./setup.py /opt/setup.py
 WORKDIR /opt
 RUN python3 setup.py install
 
-CMD [ "gunicorn", "-b", "127.0.0.1:5000", "app:app" ]
+CMD [ "gunicorn", "-b", "0.0.0.0:5000", "app:app" ]
