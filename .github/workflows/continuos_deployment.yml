@@ -19,7 +19,7 @@ jobs:
         run: python3 setup.py develop
 
       - name: Lint
-        run: pylint app/
+        run: pylint app/ integration_tests/
 
       - name: Unit Tests
         run: pytest --cov=app tests/
