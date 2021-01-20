@@ -23,6 +23,9 @@ jobs:
 
       - name: Unit Tests
         run: pytest --cov=app tests/
+      
+      - name: Integration Tests
+        run: cd integration_tests && docker-compose up integration_tests
 
       - name: Release
         if: github.ref == 'refs/heads/master'
