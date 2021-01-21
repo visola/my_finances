@@ -18,14 +18,14 @@ jobs:
       - name: Install dependencies
         run: python3 setup.py develop
 
-      - name: Integration Tests
-        run: cd integration_tests && docker-compose up integration_tests
-
       - name: Lint
         run: pylint app/ integration_tests/
 
       - name: Unit Tests
         run: pytest --cov=app tests/
+
+      - name: Integration Tests
+        run: cd integration_tests && docker-compose up integration_tests
 
       - name: Release
         if: github.ref == 'refs/heads/master'

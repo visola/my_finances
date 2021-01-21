@@ -5,8 +5,8 @@ import pathlib
 import time
 from selenium.webdriver.common.by import By
 
-slow_down = False
-host_name = "http://localhost:5000"
+SLOW_DOWN = False
+HOST_NAME = "http://localhost:5000"
 
 config = configparser.ConfigParser()
 
@@ -17,13 +17,13 @@ if os.path.exists(config_file):
 default = config['DEFAULT']
 
 if "MY_FINANCES_HOST" in default:
-    host_name = default["MY_FINANCES_HOST"]
+    HOST_NAME = default["MY_FINANCES_HOST"]
 
 def page_action(function_to_wrap):
     @wraps(function_to_wrap)
     def decorated_function(*args, **kwargs):
         result = function_to_wrap(*args, **kwargs)
-        if slow_down:
+        if SLOW_DOWN:
             time.sleep(1)
         return result
     return decorated_function
@@ -33,8 +33,8 @@ class AccountsPage():
         self.browser = browser
 
     @page_action
-    def go(self):
-        self.browser.get(f"{host_name}/accounts")
+    def get(self):
+        self.browser.get(f"{HOST_NAME}/accounts")
 
     @page_action
     def is_displayed(self, account_name):
@@ -47,15 +47,18 @@ class CreateAccountPage():
     @page_action
     def fill_form(self, account):
         self.browser.find_element(by=By.NAME, value="name").send_keys(account.name)
-        self.browser.find_element(by=By.CSS_SELECTOR, value=f"option[value='{account.type}']").click()
+        self.browser.find_element(
+            by=By.CSS_SELECTOR,
+            value=f"option[value='{account.type}']"
+        ).click()
 
     @page_action
     def submit_form(self):
         self.browser.find_element(by=By.CSS_SELECTOR, value="input[type=submit]").click()
 
     @page_action
-    def go(self):
-        self.browser.get(f"{host_name}/accounts/new")
+    def get(self):
+        self.browser.get(f"{HOST_NAME}/accounts/new")
 
 class CreateUserPage():
     def __init__(self, browser):
@@ -68,8 +71,8 @@ class CreateUserPage():
         self.browser.find_element(by=By.NAME, value="password").send_keys(user.password)
 
     @page_action
-    def go(self):
-        self.browser.get(f"{host_name}/users/new")
+    def get(self):
+        self.browser.get(f"{HOST_NAME}/users/new")
 
     @page_action
     def submit_user_form(self):
@@ -92,8 +95,8 @@ class LoginPage():
         self.browser.find_element(by=By.LINK_TEXT, value="Sign Up").click()
 
     @page_action
-    def go(self):
-        self.browser.get(f"{host_name}")
+    def get(self):
+        self.browser.get(f"{HOST_NAME}")
 
     @page_action
     def is_displayed(self):
