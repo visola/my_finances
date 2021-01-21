@@ -7,7 +7,9 @@ services:
     env_file: test-environment.properties
     depends_on:
       - mysql
-    build: ../
+    build:
+      context: ../
+      dockerfile: ./integration_tests/DockerfileApplication
     ports:
       - "5000"
 
@@ -17,4 +19,4 @@ services:
       - my_finances
     build:
       context: ../
-      dockerfile: ./integration_tests/Dockerfile
+      dockerfile: ./integration_tests/DockerfileIntegrationTest
