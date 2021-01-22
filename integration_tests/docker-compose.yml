@@ -9,7 +9,7 @@ services:
       - mysql
     build:
       context: ../
-      dockerfile: ./integration_tests/DockerfileApplication
+    command: [ "/bin/bash", "-c", "/opt/run_application.sh" ]
     ports:
       - "5000"
 
