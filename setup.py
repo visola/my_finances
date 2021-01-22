@@ -29,5 +29,8 @@ setup(
       'pytest==6.0.2',
       'pytest-cov==2.10.1',
       'sqlalchemy>=1.3,<1.4',
+
+      # Integration tests
+      'selenium==3.141.0',
     ]
 )
