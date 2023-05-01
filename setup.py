@@ -21,7 +21,7 @@ setup(
     zip_safe=False,
     install_requires=[
       'alembic==1.4.3',
-      'Flask==1.1.2',
+      'Flask==2.3.2',
       'gunicorn==20.0.4',
       'mysql-connector-python==8.0.20',
       'prometheus-flask-exporter==0.18.1',
