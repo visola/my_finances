@@ -26,13 +26,3 @@ jobs:
 
       - name: Integration Tests
         run: cd integration_tests && docker-compose up integration_tests
-
-      - name: Release
-        if: github.ref == 'refs/heads/master'
-        env:
-          PERSONAL_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
-        run: |
-          curl -X POST -i \
-            -H "Authorization: token ${PERSONAL_TOKEN}" \
-            -d '{"event_type":"my_finances_build_success"}' \
-            https://api.github.com/repos/VinnieApps/vinnieapps-infrastructure/dispatches
